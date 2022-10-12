@@ -23,7 +23,7 @@ import { AppConfig } from '@/web/Config'
 import type { ParsedItem } from '@/parser'
 import type { WidgetManager } from '../overlay/interfaces'
 
-const POEDB_LANGS = { 'en': 'us', 'ru': 'ru', 'cmn-Hant': 'tw' }
+const POEDB_LANGS = { 'en': 'us', 'ru': 'ru', 'cmn-Hant': 'tw', 'zh_CN': 'cn' }
 
 export default defineComponent({
   props: {

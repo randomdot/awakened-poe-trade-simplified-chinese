@@ -212,6 +212,10 @@ function modifyResponseHeaders (webContents: WebContents) {
   }, (details, next) => {
     if (!details.responseHeaders) return next({})
 
+    const ssid = (config.get("realm") === "pc-tencent") // tencent trade site needs POESESSID to access realm and trade data or recieve 401 error
+      ? "POESESSID=" + config.get("poesessid") + "; "
+      : ""
+    
     for (const key in details.responseHeaders) {
       if (key.toLowerCase() === 'set-cookie') {
         details.responseHeaders[key] = details.responseHeaders[key].map(cookie => {
@@ -220,10 +224,10 @@ function modifyResponseHeaders (webContents: WebContents) {
             .map(_ => _.trim())
             .filter(_ =>
               !_.toLowerCase().startsWith('samesite') &&
-              !_.toLowerCase().startsWith('secure'))
+              !_.toLowerCase().startsWith('secure') &&
+              !(_.toLowerCase().startsWith('poesessid') && ssid!==""))
             .join('; ')
-
-          return `${cookie}; SameSite=None; Secure`
+          return `${ssid}${cookie}; SameSite=None; Secure`
         })
       }
     }
