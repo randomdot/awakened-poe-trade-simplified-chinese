@@ -212,7 +212,7 @@ function modifyResponseHeaders (webContents: WebContents) {
   }, (details, next) => {
     if (!details.responseHeaders) return next({})
 
-    const ssid = (config.get("realm") === "pc-tencent") // tencent trade site needs POESESSID to access realm and trade data or recieve 401 error
+    const ssid = (config.get("realm") === "pc-tencent")
       ? "POESESSID=" + config.get("poesessid") + "; "
       : ""
     
@@ -231,7 +231,6 @@ function modifyResponseHeaders (webContents: WebContents) {
         })
       }
     }
-
     next({ responseHeaders: details.responseHeaders })
   })
 }

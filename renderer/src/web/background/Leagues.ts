@@ -7,7 +7,6 @@ export const PERMANENT_LEAGUE_IDS = [
   'Standard', 'Hardcore',
   // pc-garena
   '標準模式', '專家模式',
-  // pc-tencent
   '标准模式', '专家模式'
 ]
 

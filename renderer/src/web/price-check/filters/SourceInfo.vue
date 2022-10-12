@@ -128,8 +128,8 @@ export default defineComponent({
     "Rank: {0}": "Ранг: {0}"
   },
   "zh_CN": {
-    "implicit": "基底属性",
-    "fractured": "分裂的",
+    "implicit": "基底",
+    "fractured": "分裂",
     "explicit": "固定",
     "crafted": "工艺",
     "scourge": "天灾",

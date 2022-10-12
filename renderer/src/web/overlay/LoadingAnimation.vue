@@ -79,5 +79,6 @@ export default defineComponent({
   "zh_CN": {
     "Is ready and running in background": "程序已运行"
   }
+
 }
 </i18n>
