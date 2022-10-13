@@ -13,6 +13,7 @@ import { IncursionRoom, ParsedItem, ItemInfluence, ItemRarity } from './ParsedIt
 import { magicBasetype } from './magic-name'
 import { isModInfoLine, groupLinesByMod, parseModInfoLine, parseModType, ModifierInfo, ParsedModifier, ENCHANT_LINE, SCOURGE_LINE } from './advanced-mod-desc'
 import { calcPropPercentile, QUALITY_STATS } from './calc-q20'
+import { AppConfig } from '@/web/Config'
 
 type SectionParseResult =
   | 'SECTION_PARSED'
@@ -128,35 +129,37 @@ function normalizeName (item: ParserState) {
       item.name = baseType
     }
   }
+  const isLocalized = AppConfig().realm === 'pc-tencent'
+  const _$RT = isLocalized? _$ : _$REF
 
   if (item.rarity === ItemRarity.Normal ||
       item.rarity === ItemRarity.Rare
   ) {
     if (item.baseType) {
-      if (_$REF.MAP_BLIGHTED.test(item.baseType)) {
-        item.baseType = _$REF.MAP_BLIGHTED.exec(item.baseType)![1]
-      } else if (_$REF.MAP_BLIGHT_RAVAGED.test(item.baseType)) {
-        item.baseType = _$REF.MAP_BLIGHT_RAVAGED.exec(item.baseType)![1]
+      if (_$RT.MAP_BLIGHTED.test(item.baseType)) {
+        item.baseType = _$RT.MAP_BLIGHTED.exec(item.baseType)![1]
+      } else if (_$RT.MAP_BLIGHT_RAVAGED.test(item.baseType)) {
+        item.baseType = _$RT.MAP_BLIGHT_RAVAGED.exec(item.baseType)![1]
       }
     } else {
-      if (_$REF.MAP_BLIGHTED.test(item.name)) {
-        item.name = _$REF.MAP_BLIGHTED.exec(item.name)![1]
-      } else if (_$REF.MAP_BLIGHT_RAVAGED.test(item.name)) {
-        item.name = _$REF.MAP_BLIGHT_RAVAGED.exec(item.name)![1]
+      if (_$RT.MAP_BLIGHTED.test(item.name)) {
+        item.name = _$RT.MAP_BLIGHTED.exec(item.name)![1]
+      } else if (_$RT.MAP_BLIGHT_RAVAGED.test(item.name)) {
+        item.name = _$RT.MAP_BLIGHT_RAVAGED.exec(item.name)![1]
       }
     }
   }
 
   if (item.category === ItemCategory.MetamorphSample) {
-    if (_$REF.METAMORPH_BRAIN.test(item.name)) {
+    if (_$RT.METAMORPH_BRAIN.test(item.name)) {
       item.name = 'Metamorph Brain'
-    } else if (_$REF.METAMORPH_EYE.test(item.name)) {
+    } else if (_$RT.METAMORPH_EYE.test(item.name)) {
       item.name = 'Metamorph Eye'
-    } else if (_$REF.METAMORPH_LUNG.test(item.name)) {
+    } else if (_$RT.METAMORPH_LUNG.test(item.name)) {
       item.name = 'Metamorph Lung'
-    } else if (_$REF.METAMORPH_HEART.test(item.name)) {
+    } else if (_$RT.METAMORPH_HEART.test(item.name)) {
       item.name = 'Metamorph Heart'
-    } else if (_$REF.METAMORPH_LIVER.test(item.name)) {
+    } else if (_$RT.METAMORPH_LIVER.test(item.name)) {
       item.name = 'Metamorph Liver'
     }
   }
@@ -438,13 +441,15 @@ function parseGem (section: string[], item: ParsedItem) {
 
 function parseGemAltQuality (item: ParserState) {
   if (item.category !== ItemCategory.Gem) return
+  const isLocalized = AppConfig().realm === 'pc-tencent'
+  const _$RT = isLocalized? _$ : _$REF
 
   let gemName: string | undefined
-  if ((gemName = _$REF.QUALITY_ANOMALOUS.exec(item.name)?.[1])) {
+  if ((gemName = _$RT.QUALITY_ANOMALOUS.exec(item.name)?.[1])) {
     item.gemAltQuality = 'Anomalous'
-  } else if ((gemName = _$REF.QUALITY_DIVERGENT.exec(item.name)?.[1])) {
+  } else if ((gemName = _$RT.QUALITY_DIVERGENT.exec(item.name)?.[1])) {
     item.gemAltQuality = 'Divergent'
-  } else if ((gemName = _$REF.QUALITY_PHANTASMAL.exec(item.name)?.[1])) {
+  } else if ((gemName = _$RT.QUALITY_PHANTASMAL.exec(item.name)?.[1])) {
     item.gemAltQuality = 'Phantasmal'
   } else {
     item.gemAltQuality = 'Superior'
@@ -704,10 +709,13 @@ function parseSynthesised (section: string[], item: ParserState) {
   if (section.length === 1) {
     if (section[0] === _$.SECTION_SYNTHESISED) {
       item.isSynthesised = true
+      const isLocalized = AppConfig().realm === 'pc-tencent'
+      const _$RT = isLocalized? _$ : _$REF
+      
       if (item.baseType) {
-        item.baseType = _$REF.ITEM_SYNTHESISED.exec(item.baseType)![1]
+        item.baseType = _$RT.ITEM_SYNTHESISED.exec(item.baseType)![1]
       } else {
-        item.name = _$REF.ITEM_SYNTHESISED.exec(item.name)![1]
+        item.name = _$RT.ITEM_SYNTHESISED.exec(item.name)![1]
       }
       return 'SECTION_PARSED'
     }
@@ -723,8 +731,10 @@ function parseSuperior (item: ParserState) {
     (item.rarity === ItemRarity.Rare && item.isUnidentified) ||
     (item.rarity === ItemRarity.Unique && item.isUnidentified)
   ) {
-    if (_$REF.ITEM_SUPERIOR.test(item.name)) {
-      item.name = _$REF.ITEM_SUPERIOR.exec(item.name)![1]
+    const isLocalized = AppConfig().realm === 'pc-tencent'
+    const _$RT = isLocalized? _$ : _$REF
+    if (_$RT.ITEM_SUPERIOR.test(item.name)) {
+      item.name = _$RT.ITEM_SUPERIOR.exec(item.name)![1]
     }
   }
 }
