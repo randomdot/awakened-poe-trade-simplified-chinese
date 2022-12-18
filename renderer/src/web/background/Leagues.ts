@@ -25,9 +25,6 @@ export const selected = computed<string | undefined>({
   }
 })
 
-export const isPublic = computed<boolean | undefined>(() =>
-  selected.value ? isPublicLeague(selected.value) : undefined)
-
 export function isPublicLeague (id: string) {
   return tradeLeagues.value.some(league => id === league.id)
 }
@@ -59,7 +56,7 @@ export async function load () {
   }
 }
 
-function isRegularLeague (id: string) {
+export function isRegularLeague (id: string) {
   // not a Private League (PL01)
   // not a Race Event (.RE01)
   return /^[A-Za-z ]+$/.test(id)
