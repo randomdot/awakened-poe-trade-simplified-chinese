@@ -4,7 +4,7 @@
       <div :class="$style.timer">
         <span>{{ formatted.h }}:{{ formatted.m }}:</span><span>{{ formatted.s }}</span>
       </div>
-      <div v-if="!isRunning" :class="$style.paused">{{ t('paused') }}</div>
+      <div v-if="!isRunning" :class="$style.paused">{{ t('stopwatch.paused') }}</div>
       <div v-if="!isMoving" :class="$style.controls">
         <button v-if="!isRunning" @click="start" :class="$style.button"><i class="fas fa-play"></i></button>
         <button v-else @click="stop" :class="$style.button"><i class="fas fa-pause"></i></button>
@@ -45,12 +45,10 @@ export default defineComponent({
     }
     props.config.wmFlags = ['invisible-on-blur']
 
-    const hotkeyController = MainProcess.onEvent('MAIN->OVERLAY::stopwatch', (action) => {
-      if (action.wmId !== props.config.wmId) return
-
-      if (action.type === 'start-stop') {
+    const hotkeyController = MainProcess.onEvent('MAIN->CLIENT::widget-action', (e) => {
+      if (e.target === `stopwatch-start-stop:${props.config.wmId}`) {
         isRunning.value ? stop() : start()
-      } else if (action.type === 'reset') {
+      } else if (e.target === `stopwatch-reset:${props.config.wmId}`) {
         reset()
       }
     })
@@ -167,17 +165,3 @@ export default defineComponent({
   @apply bg-orange-700 text-white;
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "paused:": "остановлен"
-  },
-  "zh_CN": {
-    "paused:": "已暂停"
-  },
-  "cmn-Hant": {
-    "paused:": "已暫停"
-  }
-}
-</i18n>

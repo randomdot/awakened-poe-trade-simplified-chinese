@@ -2,7 +2,7 @@
   <div v-if="!error" class="layout-column min-h-0" style="height: auto;">
     <div class="mb-2 flex pl-2">
       <div class="flex items-baseline text-gray-500 mr-2">
-        <span class="mr-1">{{ t('Matched:') }}</span>
+        <span class="mr-1">{{ t(':matched') }}</span>
         <span v-if="!list" class="text-gray-600">...</span>
         <span v-else>{{ list.total }}{{ list.inexact ? '+' : '' }}</span>
       </div>
@@ -16,27 +16,27 @@
         <thead>
           <tr class="text-left">
             <th class="trade-table-heading">
-              <div class="px-2">{{ t('Price') }}</div>
+              <div class="px-2">{{ t(':price') }}</div>
             </th>
             <th v-if="item.stackSize" class="trade-table-heading">
-              <div class="px-2">{{ t('Stock') }}</div>
+              <div class="px-2">{{ t(':stock') }}</div>
             </th>
             <th v-if="filters.itemLevel" class="trade-table-heading">
-              <div class="px-2">{{ t('iLvl') }}</div>
+              <div class="px-2">{{ t(':item_level') }}</div>
             </th>
             <th v-if="item.category === 'Gem'" class="trade-table-heading">
-              <div class="px-2">{{ t('Level') }}</div>
+              <div class="px-2">{{ t(':gem_level') }}</div>
             </th>
             <th v-if="filters.quality || item.category === 'Gem'" class="trade-table-heading">
-              <div class="px-2">{{ t('Quality') }}</div>
+              <div class="px-2">{{ t(':quality') }}</div>
             </th>
             <th class="trade-table-heading" :class="{ 'w-full': !showSeller }">
               <div class="pr-2 pl-4">
-                <span class="ml-1" style="padding-left: 0.375rem;">{{ t('Listed') }}</span>
+                <span class="ml-1" style="padding-left: 0.375rem;">{{ t(':listed') }}</span>
               </div>
             </th>
             <th v-if="showSeller" class="trade-table-heading w-full">
-              <div class="px-2">{{ t('Seller') }}</div>
+              <div class="px-2">{{ t(':seller') }}</div>
             </th>
           </tr>
         </thead>
@@ -46,7 +46,7 @@
               <td colspan="100" class="text-transparent">***</td>
             </tr>
             <tr v-else :key="result.id">
-              <td class="px-2 whitespace-nowrap">{{ result.priceAmount }} {{ result.priceCurrency }} <span v-if="result.listedTimes > 2" class="rounded px-1 text-gray-800 bg-gray-400 -mr-2"><span class="font-sans">×</span> {{ result.listedTimes }}</span><i v-else-if="!result.hasNote" class="fas fa-question" /></td>
+              <td class="px-2 whitespace-nowrap"><span :class="{ 'line-through': result.priceCurrency === 'exalted' }">{{ result.priceAmount }} {{ result.priceCurrency }}</span> <span v-if="result.listedTimes > 2" class="rounded px-1 text-gray-800 bg-gray-400 -mr-2"><span class="font-sans">×</span> {{ result.listedTimes }}</span><i v-else-if="!result.hasNote" class="fas fa-question" /></td>
               <td v-if="item.stackSize" class="px-2 text-right">{{ result.stackSize }}</td>
               <td v-if="filters.itemLevel" class="px-2 whitespace-nowrap text-right">{{ result.itemLevel }}</td>
               <td v-if="item.category === 'Gem'" class="pl-2 whitespace-nowrap">{{ result.level }}</td>
@@ -69,7 +69,7 @@
     </div>
   </div>
   <ui-error-box v-else>
-    <template #name>{{ t('Trade site request failed') }}</template>
+    <template #name>{{ t(':error') }}</template>
     <p>Error: {{ error }}</p>
     <template #actions>
       <button class="btn" @click="execSearch">{{ t('Retry') }}</button>
@@ -80,7 +80,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, watch, PropType, inject, shallowReactive, shallowRef } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { useI18nNs } from '@/web/i18n'
 import { requestTradeResultList, requestResults, createTradeRequest, PricingResult, SearchResult } from './pathofexile-trade'
 import { getTradeEndpoint } from './common'
 import { AppConfig } from '@/web/Config'
@@ -225,7 +225,7 @@ export default defineComponent({
         : `https://${getTradeEndpoint()}/trade/search/${props.filters.trade.league}?q=${JSON.stringify(createTradeRequest(props.filters, props.stats, props.item))}`
     }
 
-    const { t } = useI18n()
+    const { t } = useI18nNs('trade_result')
 
     return {
       t,
@@ -279,44 +279,3 @@ export default defineComponent({
   }
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "Matched:": "Найдено:",
-    "Trade": "Трейд",
-    "Price": "Цена",
-    "Stock": "Запас",
-    "iLvl": "Ур.",
-    "Level": "Уровень",
-    "Quality": "К-во",
-    "Listed": "Выставлен",
-    "Seller": "Продавец",
-    "Trade site request failed": "Запрос к сайту не удался"
-  },
-  "zh_CN": {
-    "Matched:": "已匹配:",
-    "Trade": "交易",
-    "Price": "价格",
-    "Stock": "存量",
-    "iLvl": "物等",
-    "Level": "等级",
-    "Quality": "品质",
-    "Listed": "已列出",
-    "Seller": "卖家",
-    "Trade site request failed": "交易站点请求失败"
-  },
-  "cmn-Hant": {
-    "Matched:": "已匹配:",
-    "Trade": "交易",
-    "Price": "價格",
-    "Stock": "存量",
-    "iLvl": "物等",
-    "Level": "等級",
-    "Quality": "品質",
-    "Listed": "已列出",
-    "Seller": "賣家",
-    "Trade site request failed": "交易站點請求失敗"
-  }
-}
-</i18n>

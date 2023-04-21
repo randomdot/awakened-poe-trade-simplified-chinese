@@ -8,6 +8,7 @@ export default {
   RARITY_GEM: 'Gem',
   RARITY_CURRENCY: 'Currency',
   RARITY_DIVCARD: 'Divination Card',
+  RARITY_QUEST: 'Quest',
   MAP_TIER: 'Map Tier: ',
   RARITY: 'Rarity: ',
   ITEM_CLASS: 'Item Class: ',
@@ -90,7 +91,7 @@ export default {
   DELVE_MODS: ['Subterranean', 'of the Underground'],
   VEILED_MODS: ['Chosen', 'of the Order'],
   INCURSION_MODS: ["Guatelitzi's", "Xopec's", "Topotante's", "Tacati's", "Matatl's", 'of Matatl', "Citaqualotl's", 'of Citaqualotl', 'of Tacati', 'of Guatelitzi', 'of Puhuarte'],
-  RELIC_UNIQUE: 'Relic Unique',
+  FOIL_UNIQUE: 'Foil Unique',
   UNMODIFIABLE: 'Unmodifiable',
   // ---
   CHAT_SYSTEM: /^: (?<body>.+)$/,

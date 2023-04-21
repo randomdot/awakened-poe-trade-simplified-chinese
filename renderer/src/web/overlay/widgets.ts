@@ -1,4 +1,3 @@
-
 export interface Widget {
   wmId: number
   wmType: string
@@ -43,10 +42,17 @@ export interface PriceCheckWidget extends Widget {
   activateStockFilter: boolean
   showCursor: boolean
   requestPricePrediction: boolean
+  builtinBrowser: boolean
 }
 
 export interface ItemCheckWidget extends Widget {
+  hotkey: string | null
+  wikiKey: string | null
+  poedbKey: string | null
+  craftOfExileKey: string | null
+  stashSearchKey: string | null
   maps: {
+    profile: number
     showNewStats: boolean
     selectedStats: Array<{
       matcher: string
@@ -59,6 +65,10 @@ export interface StopwatchWidget extends Widget {
   anchor: Anchor
   toggleKey: string | null
   resetKey: string | null
+}
+
+export interface DelveGridWidget extends Widget {
+  toggleKey: string | null
 }
 
 export interface StashSearchWidget extends Widget {
@@ -81,4 +91,5 @@ export interface ImageStripWidget extends Widget {
 
 export interface ItemSearchWidget extends Widget {
   anchor: Anchor
+  ocrGemsKey: string | null
 }

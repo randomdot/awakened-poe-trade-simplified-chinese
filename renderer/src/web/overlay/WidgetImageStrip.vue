@@ -5,7 +5,7 @@
         <div v-if="!isEditing" class="text-gray-100 m-1 leading-4 text-center">{{ config.wmTitle || 'Untitled' }}</div>
         <input v-else
           class="leading-4 rounded text-gray-100 p-1 bg-gray-700 w-full mb-1"
-          :placeholder="t('widget title')"
+          :placeholder="t('widget.title')"
           v-model="config.wmTitle">
       </template>
       <dnd-container tag="div" class="flex gap-x-1"
@@ -26,7 +26,7 @@
         <template #footer v-if="isEditing">
           <div :class="$style.card" class="flex justify-center items-center">
             <input type="file" id="file" class="hidden" accept="image/*" @input="handleFile">
-            <label class="text-gray-400 hover:bg-gray-700 py-1 px-2 rounded cursor-pointer" for="file"><i class="fas fa-file-import"></i> {{ t('Choose File') }}</label>
+            <label class="text-gray-400 hover:bg-gray-700 py-1 px-2 rounded cursor-pointer" for="file"><i class="fas fa-file-import"></i> {{ t('choose_file') }}</label>
           </div>
         </template>
       </dnd-container>
@@ -39,7 +39,7 @@ import { defineComponent, inject, PropType, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Widget from './Widget.vue'
 import DndContainer from 'vuedraggable'
-import { MainProcess } from '@/web/background/IPC'
+import { Host } from '@/web/background/IPC'
 import { WidgetManager, ImageStripWidget } from './interfaces'
 
 export default defineComponent({
@@ -72,13 +72,17 @@ export default defineComponent({
 
     return {
       t,
-      handleFile (e: Event) {
+      async handleFile (e: Event) {
         const target = (e as InputEvent).target as HTMLInputElement
-        props.config.images.push({
-          id: Math.max(0, ...props.config.images.map(_ => _.id)) + 1,
-          url: MainProcess.importFile(target.files![0].path)!
-        })
-        target.value = ''
+        try {
+          const name = await Host.importFile(target.files![0])
+          props.config.images.push({
+            id: Math.max(0, ...props.config.images.map(_ => _.id)) + 1,
+            url: name
+          })
+        } finally {
+          target.value = ''
+        }
       },
       remove (id: number) {
         props.config.images = props.config.images.filter(_ => _.id !== id)
@@ -98,20 +102,3 @@ export default defineComponent({
   position: relative;
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "widget title": "заголовок виджета",
-    "Choose File": "Выберите файл"
-  },
-  "cmn-Hant": {
-    "widget title": "組件標題",
-    "Choose File": "選擇文件"
-  },
-  "zh_CN": {
-    "widget title": "组件标题",
-    "Choose File": "选择文件"
-  }
-}
-</i18n>

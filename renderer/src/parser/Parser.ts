@@ -47,7 +47,7 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   parseFlask,
   parseStackSize,
   parseCorrupted,
-  parseRelic,
+  parseFoil,
   parseInfluence,
   parseMap,
   parseSockets,
@@ -307,6 +307,7 @@ function parseNamePlate (section: string[]) {
       item.category = ItemCategory.Gem
       break
     case _$.RARITY_NORMAL:
+    case _$.RARITY_QUEST:
       item.rarity = ItemRarity.Normal
       break
     case _$.RARITY_MAGIC:
@@ -371,12 +372,12 @@ function parseCorrupted (section: string[], item: ParsedItem) {
   return 'SECTION_SKIPPED'
 }
 
-function parseRelic (section: string[], item: ParsedItem) {
+function parseFoil (section: string[], item: ParsedItem) {
   if (item.rarity !== ItemRarity.Unique) {
     return 'PARSER_SKIPPED'
   }
-  if (section[0] === _$.RELIC_UNIQUE) {
-    item.isRelic = true
+  if (section[0] === _$.FOIL_UNIQUE) {
+    item.isFoil = true
     return 'SECTION_PARSED'
   }
   return 'SECTION_SKIPPED'
@@ -932,11 +933,14 @@ function transformToLegacyModifiers (item: ParsedItem) {
 }
 
 function calcBasePercentile (item: ParsedItem) {
-  if (!item.info.armour) return
+  const info = item.info.unique
+    ? ITEM_BY_REF('ITEM', item.info.unique.base)![0].armour
+    : item.info.armour
+  if (!info) return
+
   // Base percentile is the same for all defences.
   // Using `AR/EV -> ES -> WARD` order to improve accuracy
   // of calculation (larger rolls = more precise).
-  const info = item.info.armour
   if (item.armourAR && info.ar) {
     item.basePercentile = calcPropPercentile(item.armourAR, info.ar, QUALITY_STATS.ARMOUR, item)
   } else if (item.armourEV && info.ev) {

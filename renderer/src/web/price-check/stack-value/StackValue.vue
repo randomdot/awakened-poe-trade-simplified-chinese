@@ -3,9 +3,9 @@
     class="p-2 border-dashed border border-gray-600 rounded mt-2">
     <div class="flex text-gray-400 leading-none">
       <div class="w-1/2"
-        >{{ t('You have') }} <span class="font-sans">×</span> {{ value.have.amount }} <i class="fas fa-arrow-right text-gray-600 px-1 text-xs"></i> {{ value.have.price }}</div>
+        >{{ t('trade_result.you_have') }} <span class="font-sans">×</span> {{ value.have.amount }} <i class="fas fa-arrow-right text-gray-600 px-1 text-xs"></i> {{ value.have.price }}</div>
       <div class="w-1/2 pl-2" v-if="value.oneStack"
-        >{{ t('Stack') }} <span class="font-sans">×</span> {{ value.oneStack.amount }} <i class="fas fa-arrow-right text-gray-600 px-1 text-xs"></i> {{ value.oneStack.price }}</div>
+        >{{ t('trade_result.stack') }} <span class="font-sans">×</span> {{ value.oneStack.amount }} <i class="fas fa-arrow-right text-gray-600 px-1 text-xs"></i> {{ value.oneStack.price }}</div>
     </div>
   </div>
 </template>
@@ -13,7 +13,7 @@
 <script lang="ts">
 import { defineComponent, PropType, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { displayRounding, findPriceByQuery, autoCurrency } from '../../background/Prices'
+import { usePoeninja, displayRounding } from '@/web/background/Prices'
 import { getDetailsId } from '../trends/getDetailsId'
 import { ParsedItem } from '@/parser'
 import { ItemFilters } from '../filters/interfaces'
@@ -30,6 +30,8 @@ export default defineComponent({
     }
   },
   setup (props) {
+    const { findPriceByQuery, autoCurrency } = usePoeninja()
+
     function getPriceFor (n: number) {
       const one = findPriceByQuery(getDetailsId(props.item)!)!
 
@@ -64,20 +66,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<i18n>
-{
-  "ru": {
-    "You have": "В наличии",
-    "Stack": "Стак"
-  },
-  "zh_CN": {
-    "You have": "你拥有",
-    "Stack": "堆叠"
-  },
-  "cmn-Hant": {
-    "You have": "你擁有",
-    "Stack": "堆疊"
-  }
-}
-</i18n>

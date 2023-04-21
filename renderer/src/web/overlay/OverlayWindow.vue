@@ -1,5 +1,6 @@
 <template>
-  <div id="overlay-window" class="overflow-hidden relative w-full h-full">
+  <div id="overlay-window" class="overflow-hidden relative w-full h-full"
+    :style="{ '--game-panel': poePanelWidth.toFixed(4) + 'px' }">
     <!-- <div style="border: 4px solid red; top: 0; left: 0; height: 100%; width: 100%; position: absolute;"></div> -->
     <div style="top: 0; left: 0; height: 100%; width: 100%; position: absolute;"
       :style="{ background: overlayBackground }"
@@ -11,12 +12,11 @@
         :id="`widget-${widget.wmId}`"
         :is="`widget-${widget.wmType}`" />
     </template>
-    <widget-debug id="widget-debug" />
     <loading-animation />
     <div v-if="showEditingNotification"
       class="widget-default-style p-6 bg-blue-600 mx-auto text-center text-base mt-6"
       style="min-width: 30rem; z-index: 999; width: fit-content; position: absolute; left: 0; right: 0;">
-      <i18n-t keypath="Press {0} to continue editing.">
+      <i18n-t keypath="reopen_settings">
         <span class="bg-blue-800 rounded px-1">{{ overlayKey }}</span>
       </i18n-t>
     </div>
@@ -29,25 +29,23 @@
 <script lang="ts">
 import { defineComponent, provide, shallowRef, watch, readonly, computed, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { MainProcess } from '@/web/background/IPC'
+import { Host } from '@/web/background/IPC'
 import { Widget, WidgetManager } from './interfaces'
 import WidgetTimer from './WidgetTimer.vue'
 import WidgetStashSearch from './WidgetStashSearch.vue'
 import WidgetMenu from './WidgetMenu.vue'
 import PriceCheckWindow from '@/web/price-check/PriceCheckWindow.vue'
-import WidgetDebug from './WidgetDebug.vue'
 import WidgetItemCheck from '@/web/item-check/WidgetItemCheck.vue'
 import WidgetImageStrip from './WidgetImageStrip.vue'
 import WidgetDelveGrid from './WidgetDelveGrid.vue'
 import WidgetItemSearch from './WidgetItemSearch.vue'
 import WidgetSettings from '../settings/SettingsWindow.vue'
-import { AppConfig, saveConfig } from '@/web/Config'
+import { AppConfig, saveConfig, pushHostConfig } from '@/web/Config'
 import LoadingAnimation from './LoadingAnimation.vue'
 // ---
-import '@/web/background/AutoUpdates'
-import '@/web/background/Prices'
-import { load as loadLeagues } from '@/web/background/Leagues'
-import { registerOtherServices } from '../other-services'
+import { usePoeninja } from '@/web/background/Prices'
+import { useLeagues } from '@/web/background/Leagues'
+import { handleLine } from '@/web/client-log/client-log'
 
 type WMID = Widget['wmId']
 
@@ -57,7 +55,6 @@ export default defineComponent({
     WidgetStashSearch,
     WidgetMenu,
     WidgetPriceCheck: PriceCheckWindow,
-    WidgetDebug,
     WidgetItemCheck,
     WidgetImageStrip,
     WidgetDelveGrid,
@@ -66,19 +63,16 @@ export default defineComponent({
     LoadingAnimation
   },
   setup () {
-    loadLeagues()
+    usePoeninja()
+    useLeagues().load()
 
-    document.documentElement.lang = AppConfig().language
-
-    const active = shallowRef(false)
+    const active = shallowRef(!Host.isElectron)
     const gameFocused = shallowRef(false)
     const hideUI = shallowRef(false)
     const showEditingNotification = shallowRef(false)
 
     watch(active, (active) => {
-      if (!active) {
-        nextTick(() => { saveConfig() })
-      } else {
+      if (active) {
         showEditingNotification.value = false
       }
     })
@@ -92,7 +86,24 @@ export default defineComponent({
       }
     })
 
-    MainProcess.onEvent('MAIN->OVERLAY::focus-change', (state) => {
+    window.addEventListener('blur', () => {
+      nextTick(() => { saveConfig() })
+    })
+    window.addEventListener('focus', () => {
+      Host.sendEvent({
+        name: 'CLIENT->MAIN::used-recently',
+        payload: { isOverlay: Host.isElectron }
+      })
+    })
+
+    Host.onEvent('MAIN->CLIENT::config-changed', () => {
+      const widget = topmostOrExclusiveWidget.value
+      if (widget.wmType === 'settings') {
+        hide(widget.wmId)
+      }
+    })
+
+    Host.onEvent('MAIN->OVERLAY::focus-change', (state) => {
       active.value = state.overlay
       gameFocused.value = state.game
 
@@ -110,36 +121,37 @@ export default defineComponent({
         }
       }
     })
-    MainProcess.onEvent('MAIN->OVERLAY::visibility', (e) => {
+    Host.onEvent('MAIN->OVERLAY::visibility', (e) => {
       hideUI.value = !e.isVisible
     })
-    registerOtherServices()
+
+    Host.onEvent('MAIN->CLIENT::game-log', (e) => {
+      for (const line of e.lines) {
+        handleLine(line)
+      }
+    })
 
     onMounted(() => {
       nextTick(() => {
-        MainProcess.sendEvent({ name: 'OVERLAY->MAIN::ready', payload: undefined })
+        Host.sendEvent({
+          name: 'CLIENT->MAIN::used-recently',
+          payload: { isOverlay: Host.isElectron }
+        })
+        pushHostConfig()
       })
     })
 
     const size = (() => {
       const size = shallowRef({
-        devicePixelRatio: window.devicePixelRatio,
         width: window.innerWidth,
         height: window.innerHeight
       })
       window.addEventListener('resize', () => {
         size.value = {
-          devicePixelRatio: window.devicePixelRatio,
           width: window.innerWidth,
           height: window.innerHeight
         }
       })
-      watch(() => size.value.devicePixelRatio, (dpr) => {
-        MainProcess.sendEvent({
-          name: 'OVERLAY->MAIN::devicePixelRatio-change',
-          payload: dpr
-        })
-      }, { immediate: true })
       return readonly(size)
     })()
 
@@ -225,14 +237,19 @@ export default defineComponent({
       return showExclusive || topmostWidget.value
     })
 
-    watch(topmostOrExclusiveWidget, (widget) => {
+    watch(topmostOrExclusiveWidget, (widget, wasWidget) => {
       showEditingNotification.value = (widget.wmType === 'settings')
-    })
+      // TODO: hack, should find a better way to save config
+      if (wasWidget && wasWidget.wmZorder === 'exclusive' && wasWidget.wmType !== 'settings') {
+        saveConfig()
+      }
+    }, { immediate: false })
 
     const poePanelWidth = computed(() => {
+      if (!Host.isElectron) return 0
       // sidebar is 986px at Wx1600H
       const ratio = 986 / 1600
-      return Math.round(size.value.height * ratio)
+      return size.value.height * ratio
     })
 
     provide<WidgetManager>('wm', {
@@ -249,8 +266,13 @@ export default defineComponent({
     })
 
     function handleBackgroundClick () {
-      if (AppConfig().overlayBackgroundClose) {
-        MainProcess.closeOverlay()
+      if (!Host.isElectron) {
+        const widget = topmostOrExclusiveWidget.value
+        if (widget.wmZorder === 'exclusive') {
+          hide(widget.wmId)
+        }
+      } else if (AppConfig().overlayBackgroundClose) {
+        Host.sendEvent({ name: 'OVERLAY->MAIN::focus-game', payload: undefined })
       }
     }
 
@@ -281,6 +303,7 @@ export default defineComponent({
 
     return {
       t,
+      poePanelWidth,
       overlayBackground,
       widgets: computed(() => AppConfig().widgets),
       handleBackgroundClick,
@@ -291,11 +314,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<i18n>
-  {
-    "ru": {
-      "Press {0} to continue editing.": "Нажмите {0} чтобы продолжить редактирование."
-    }
-  }
-</i18n>

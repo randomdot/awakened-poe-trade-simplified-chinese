@@ -2,16 +2,19 @@
   <div v-if="trend" class="flex items-center pb-4" style="min-height: 3rem;">
     <div v-if="!isValuableBasetype && !slowdown.isReady.value" class="flex flex-1 justify-center">
       <div><i class="fas fa-dna fa-spin text-gray-600"></i></div>
-      <div class="pl-2">{{ t('Getting price') }} <span class="text-gray-600">{{ t('from poe.ninja ...') }}</span></div>
+      <i18n-t keypath="trade_result.getting_price" class="pl-2">
+        <span class="text-gray-600">{{ t(':getting_price_from') }}</span>
+      </i18n-t>
     </div>
     <template v-else>
       <item-quick-price class="flex-1 text-base justify-center"
         :price="trend.price"
         :fraction="filters.stackSize != null"
         :item-img="item.info.icon"
+        :item-base="item.info"
       >
         <template #item v-if="isValuableBasetype">
-          <span class="text-gray-400">{{ t('Base item') }}</span>
+          <span class="text-gray-400">{{ t(':base_item') }}</span>
         </template>
       </item-quick-price>
       <div v-if="trend.change" @click="openNinja" :class="$style['trend-btn']">
@@ -22,7 +25,7 @@
             <span v-if="trend.change.forecast === 'const'" class="pr-1 text-gray-600 font-sans leading-none">±</span>
             <span>{{ trend.change.text }}</span>
           </div>
-          <div class="text-xs text-gray-500 leading-none">{{ t('Last 7 days') }}</div>
+          <div class="text-xs text-gray-500 leading-none">{{ t(':graph_7d') }}</div>
         </div>
         <div v-if="trend.change" class="w-12 h-8">
           <vue-apexcharts
@@ -47,12 +50,18 @@
       </div>
     </template>
   </div>
+  <div v-else-if="!item.info.craftable" class="flex items-center pb-4" style="min-height: 3rem;">
+    <item-quick-price class="flex-1 text-base justify-center"
+      currency-text
+      :item-img="item.info.icon"
+      :item-base="item.info" />
+  </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, computed, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { findPriceByQuery, autoCurrency } from '../../background/Prices'
+import { useI18nNs } from '@/web/i18n'
+import { usePoeninja } from '@/web/background/Prices'
 import { isValuableBasetype, getDetailsId } from './getDetailsId'
 import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
 import VueApexcharts from 'vue3-apexcharts'
@@ -78,6 +87,9 @@ export default defineComponent({
     }
   },
   setup (props) {
+    const { t } = useI18nNs('trade_result')
+    const { findPriceByQuery, autoCurrency } = usePoeninja()
+
     watch(() => props.item, (item) => {
       slowdown.reset(item)
     }, { immediate: true })
@@ -97,8 +109,6 @@ export default defineComponent({
         url: trend.url
       }
     })
-
-    const { t } = useI18n()
 
     return {
       t,
@@ -163,26 +173,3 @@ function deltaFromGraph (graphPoints: Array<number | null>) {
   }
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "Base item": "База предмета",
-    "Last 7 days": "За неделю",
-    "Getting price": "Получение цены",
-    "from poe.ninja ...": "с poe.ninja ..."
-  },
-  "zh_CN": {
-    "Base item": "基础物品",
-    "Last 7 days": "最近 7 天",
-    "Getting price": "正在获取价格",
-    "from poe.ninja ...": "从 poe.ninja ..."
-  },
-  "cmn-Hant": {
-    "Base item": "基礎物品",
-    "Last 7 days": "最近 7 天",
-    "Getting price": "正在獲取價格",
-    "from poe.ninja ...": "從 poe.ninja ..."
-  }
-}
-</i18n>

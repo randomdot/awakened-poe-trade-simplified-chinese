@@ -21,7 +21,10 @@ export function createExactStatFilters (
   statsByType: StatCalculated[],
   opts: { searchStatRange: number }
 ): StatFilter[] {
-  if (item.mapBlighted) return []
+  if (
+    item.mapBlighted ||
+    item.category === ItemCategory.Invitation
+  ) return []
   if (
     item.isUnidentified &&
     item.rarity === ItemRarity.Unique &&
@@ -40,7 +43,6 @@ export function createExactStatFilters (
   if (item.rarity === ItemRarity.Magic && (
     item.category !== ItemCategory.ClusterJewel &&
     item.category !== ItemCategory.Map &&
-    item.category !== ItemCategory.Invitation &&
     item.category !== ItemCategory.HeistContract &&
     item.category !== ItemCategory.HeistBlueprint &&
     item.category !== ItemCategory.Sentinel
@@ -128,6 +130,9 @@ export function initUiModFilters (
   if (item.info.refName !== 'Split Personality') {
     filterItemProp(ctx)
     filterPseudo(ctx)
+    if (item.info.refName === "Emperor's Vigilance") {
+      filterBasePercentile(ctx)
+    }
   }
 
   if (!item.isCorrupted && !item.isMirrored) {
@@ -290,11 +295,11 @@ function hideNotVariableStat (filter: StatFilter, item: ParsedItem) {
   ) return
 
   if (!filter.roll) {
-    filter.hidden = 'Roll is not variable'
+    filter.hidden = 'filters.hide_const_roll'
   } else if (!filter.roll.bounds) {
     filter.roll.min = undefined
     filter.roll.max = undefined
-    filter.hidden = 'Roll is not variable'
+    filter.hidden = 'filters.hide_const_roll'
   }
 }
 
@@ -356,7 +361,7 @@ function finalFilterTweaks (ctx: FiltersCreationContext) {
       text: '1 Empty or Crafted Modifier',
       statRef: '1 Empty or Crafted Modifier',
       disabled: true,
-      hidden: 'Select only if item has 6 modifiers (1 of which is crafted) or if it has 5 modifiers',
+      hidden: 'filters.hide_empty_mod',
       tag: FilterTag.Pseudo,
       sources: [],
       option: {
@@ -374,7 +379,7 @@ function finalFilterTweaks (ctx: FiltersCreationContext) {
       const mod = ctx.item.statsByType.find(mod => mod.stat.ref === filter.statRef)!
       if (mod.stat.trade.ids[ModifierType.Explicit]) {
         // hide only if fractured mod has corresponding explicit variant
-        filter.hidden = 'Select only if price-checking as base item for crafting'
+        filter.hidden = 'filters.hide_for_crafting'
       }
     }
   }
@@ -390,7 +395,7 @@ function finalFilterTweaks (ctx: FiltersCreationContext) {
 function applyClusterJewelRules (filters: StatFilter[]) {
   for (const filter of filters) {
     if (filter.statRef === '# Added Passive Skills are Jewel Sockets') {
-      filter.hidden = 'Roll is not variable'
+      filter.hidden = 'filters.hide_const_roll'
       filter.disabled = true
     }
 

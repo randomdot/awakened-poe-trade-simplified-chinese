@@ -1,6 +1,5 @@
 import fnv1a from '@sindresorhus/fnv1a'
 import type { BaseType, DropEntry, Stat, StatMatcher, TranslationDict } from './interfaces'
-import { AppConfig } from '@/web/Config'
 
 export * from './interfaces'
 
@@ -12,6 +11,8 @@ export let APP_PATRONS: Array<{ from: string, months: number, style: number }>
 export let ITEM_BY_TRANSLATED = (ns: BaseType['namespace'], name: string): BaseType[] | undefined => undefined
 export let ITEM_BY_REF = (ns: BaseType['namespace'], name: string): BaseType[] | undefined => undefined
 export let ITEMS_ITERATOR = function * (includes: string, andIncludes?: string[]): Generator<BaseType> {}
+
+export let ALTQ_GEM_NAMES = function * (): Generator<string> {}
 
 export let STAT_BY_MATCH_STR = (name: string): { matcher: StatMatcher, stat: Stat } | undefined => undefined
 export let STAT_BY_REF = (name: string): Stat | undefined => undefined
@@ -53,6 +54,24 @@ function ndjsonFindLines<T> (ndjson: string) {
   }
 }
 
+function itemNamesFromLines (items: Generator<BaseType>) {
+  let cached = ''
+  return function * (): Generator<string> {
+    if (!cached.length) {
+      for (const item of items) {
+        cached += (item.name + '\n')
+      }
+    }
+
+    let start = 0
+    while (start !== cached.length) {
+      const end = cached.indexOf('\n', start)
+      yield cached.slice(start, end)
+      start = end + 1
+    }
+  }
+}
+
 async function loadItems (language: string) {
   const ndjson = await (await fetch(`${import.meta.env.BASE_URL}data/${language}/items.ndjson`)).text()
   const INDEX_WIDTH = 2
@@ -81,6 +100,7 @@ async function loadItems (language: string) {
   ITEM_BY_TRANSLATED = commonFind(indexNames, 'name')
   ITEM_BY_REF = commonFind(indexRefNames, 'refName')
   ITEMS_ITERATOR = ndjsonFindLines<BaseType>(ndjson)
+  ALTQ_GEM_NAMES = itemNamesFromLines(ITEMS_ITERATOR('altQuality":["Anomalous'))
 }
 
 async function loadStats (language: string) {
@@ -123,25 +143,23 @@ export function stat (text: string) {
   return text
 }
 
-;(async function initData () { /* eslint-disable no-lone-blocks */
-  const { language } = AppConfig()
+export async function init (lang: string) {
+  CLIENT_STRINGS_REF = (await import(/* @vite-ignore */`${import.meta.env.BASE_URL}data/en/client_strings.js`)).default
+  ITEM_DROP = await (await fetch(`${import.meta.env.BASE_URL}data/item-drop.json`)).json()
+  APP_PATRONS = await (await fetch(`${import.meta.env.BASE_URL}data/patrons.json`)).json()
 
-  {
-    await loadItems(language)
-    await loadStats(language)
+  await loadForLang(lang)
 
-    for (const text of DELAYED_STAT_VALIDATION) {
-      if (STAT_BY_REF(text) == null) {
-        throw new Error(`Cannot find stat: ${text}`)
-      }
+  for (const text of DELAYED_STAT_VALIDATION) {
+    if (STAT_BY_REF(text) == null) {
+      throw new Error(`Cannot find stat: ${text}`)
     }
-    DELAYED_STAT_VALIDATION.clear()
   }
+  DELAYED_STAT_VALIDATION.clear()
+}
 
-  { /* eslint-disable no-eval */
-    CLIENT_STRINGS = (await import(/* @vite-ignore */`${import.meta.env.BASE_URL}data/${language}/client_strings.js`)).default
-    CLIENT_STRINGS_REF = (await import(/* @vite-ignore */`${import.meta.env.BASE_URL}data/en/client_strings.js`)).default
-    ITEM_DROP = await (await fetch(`${import.meta.env.BASE_URL}data/item-drop.json`)).json()
-    APP_PATRONS = await (await fetch(`${import.meta.env.BASE_URL}data/patrons.json`)).json()
-  }
-})()
+export async function loadForLang (lang: string) {
+  CLIENT_STRINGS = (await import(/* @vite-ignore */`${import.meta.env.BASE_URL}data/${lang}/client_strings.js`)).default
+  await loadItems(lang)
+  await loadStats(lang)
+}

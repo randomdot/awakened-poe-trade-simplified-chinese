@@ -37,7 +37,7 @@
     <stack-value :filters="itemFilters" :item="item"/>
     <div v-if="showSupportLinks" class="mt-auto border border-dashed p-2">
       <div class="mb-1">{{ t('Support development on') }} <a href="https://patreon.com/awakened_poe_trade" class="inline-flex align-middle animate__animated animate__fadeInRight" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a></div>
-      <i18n-t keypath="This tool relies on {0} and {1}, consider support them as well" tag="div">
+      <i18n-t keypath="app.thanks_3rd_party" tag="div">
         <a href="https://poeprices.info" target="_blank" class="bg-gray-900 px-1 rounded">poeprices.info</a>
         <a href="https://poe.ninja/support" target="_blank" class="bg-gray-900 px-1 rounded">poe.ninja</a>
       </i18n-t>
@@ -63,7 +63,7 @@ import { CATEGORY_TO_TRADE_ID, createTradeRequest } from './trade/pathofexile-tr
 import { AppConfig } from '@/web/Config'
 import { FilterPreset } from './filters/interfaces'
 import { PriceCheckWidget } from '../overlay/interfaces'
-import { selected as selectedLeague, isRegularLeague } from '@/web/background/Leagues'
+import { useLeagues } from '@/web/background/Leagues'
 
 let _showSupportLinksCounter = 0
 
@@ -91,6 +91,7 @@ export default defineComponent({
   },
   setup (props) {
     const widget = computed(() => AppConfig<PriceCheckWidget>('price-check')!)
+    const leagues = useLeagues()
 
     const presets = ref<{ active: string, presets: FilterPreset[] }>(null!)
     const itemFilters = computed(() => presets.value.presets.find(preset => preset.id === presets.value.active)!.filters)
@@ -105,7 +106,7 @@ export default defineComponent({
 
     watch(() => props.item, (item, prevItem) => {
       presets.value = createPresets(item, {
-        league: selectedLeague.value!,
+        league: leagues.selectedId.value!,
         chaosPriceThreshold: widget.value.chaosPriceThreshold,
         collapseListings: widget.value.collapseListings,
         activateStockFilter: widget.value.activateStockFilter,
@@ -173,9 +174,9 @@ export default defineComponent({
     const showPredictedPrice = computed(() => {
       if (!widget.value.requestPricePrediction ||
           AppConfig().language !== 'en' ||
-          !isRegularLeague(selectedLeague.value!)) return false
+          !leagues.selected.value!.isPopular) return false
 
-      if (presets.value.active === 'Base item') return false
+      if (presets.value.active === 'filters.preset_base_item') return false
 
       return props.item.rarity === ItemRarity.Rare &&
         props.item.category !== ItemCategory.Map &&
@@ -242,17 +243,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<i18n>
-{
-  "ru": {
-    "This tool relies on {0} and {1}, consider support them as well": "Это приложение полагается на сайт {1}, можете поддержать и его"
-  },
-  "zh_CN": {
-    "This tool relies on {0} and {1}, consider support them as well": "此工具基于 {0} 及 {1}, 请支持他们"
-  },
-  "chm-Hant": {
-    "This tool relies on {0} and {1}, consider support them as well": "此工具基於 {0} 及 {1}, 請支持他們"
-  }
-}
-</i18n>

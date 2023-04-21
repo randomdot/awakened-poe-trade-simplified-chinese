@@ -18,7 +18,7 @@
           </div>
         </button>
         <div class="flex items-baseline gap-x-1">
-          <div v-if="showQ20Notice" :class="$style['qualityLabel']">{{ t('Q {0}%', [calcQuality]) }}</div>
+          <div v-if="showQ20Notice" :class="$style['qualityLabel']">{{ t('item.prop_quality', [calcQuality]) }}</div>
           <div class="flex gap-x-px">
             <input :class="$style['rollInput']" :placeholder="t('min')" :min="roll?.bounds?.min" :max="roll?.bounds?.max" :step="changeStep" type="number"
               v-if="showInputs" ref="inputMinEl"
@@ -44,7 +44,7 @@
         </div>
         <div class="flex-1 flex items-start gap-x-2">
           <span v-if="showTag"
-            :class="[$style['tag'], $style[`tag-${tag}`]]">{{ t(tag) }}{{ (filter.sources.length > 1) ? ` x ${filter.sources.length}` : null }}</span>
+            :class="[$style['tag'], $style[`tag-${tag}`]]">{{ t(`filters.tag_${tag.replace('-', '_')}`) }}{{ (filter.sources.length > 1) ? ` x ${filter.sources.length}` : null }}</span>
           <filter-modifier-tiers :filter="filter" :item="item" />
           <filter-modifier-item-has-empty :filter="filter" />
         </div>
@@ -74,7 +74,7 @@ import FilterModifierItemHasEmpty from './FilterModifierItemHasEmpty.vue'
 import FilterModifierTiers from './FilterModifierTiers.vue'
 import { AppConfig } from '@/web/Config'
 import { ItemRarity, ParsedItem } from '@/parser'
-import { FilterTag, StatFilter } from './interfaces'
+import { FilterTag, StatFilter, INTERNAL_TRADE_IDS } from './interfaces'
 import SourceInfo from './SourceInfo.vue'
 
 export default defineComponent({
@@ -107,12 +107,12 @@ export default defineComponent({
 
     const showQ20Notice = computed(() => {
       return [
-        'armour.armour',
-        'armour.evasion_rating',
-        'armour.energy_shield',
-        'armour.ward',
-        'weapon.total_dps',
-        'weapon.physical_dps'
+        'item.armour',
+        'item.evasion_rating',
+        'item.energy_shield',
+        'item.ward',
+        'item.total_dps',
+        'item.physical_dps'
       ].includes(props.filter.tradeId[0])
     })
 
@@ -191,7 +191,13 @@ export default defineComponent({
       showInputs: computed(() => props.filter.roll != null && !props.filter.oils),
       fontSize: computed(() => AppConfig().fontSize),
       isDisabled: computed(() => props.filter.disabled),
-      text: computed(() => t(props.filter.text)),
+      text: computed(() => {
+        if (!(INTERNAL_TRADE_IDS as readonly string[]).includes(props.filter.tradeId[0])) {
+          return props.filter.text
+        } else {
+          return t(props.filter.tradeId[0], ['#', '#'])
+        }
+      }),
       roll: computed(() => props.filter.roll),
       isHidden: computed(() => props.filter.hidden != null),
       hiddenReason: computed(() => t(props.filter.hidden!)),
@@ -356,131 +362,3 @@ export default defineComponent({
   }
 }
 </style>
-
-<i18n>
-{
-  "en": {
-    "explicit-shaper": "Shaper",
-    "explicit-elder": "Elder",
-    "explicit-crusader": "Crusader",
-    "explicit-hunter": "Hunter",
-    "explicit-redeemer": "Redeemer",
-    "explicit-warlord": "Warlord",
-    "explicit-delve": "Delve",
-    "explicit-veiled": "Veiled",
-    "explicit-incursion": "Incursion"
-  },
-  "ru": {
-    "Q {0}%": "К-во: {0}%",
-    "Base Percentile: #%": "Ролл значений базы: #%",
-    "DPS: #": "ДПС: #",
-    "Elemental DPS: #": "Стихийный ДПС: #",
-    "Physical DPS: #": "Физический ДПС: #",
-    "Attacks per Second: #": "Атак в секунду: #",
-    "Critical Strike Chance: #%": "Шанс критического удара: #%",
-    "Armour: #": "Броня: #",
-    "Evasion Rating: #": "Уклонение: #",
-    "Energy Shield: #": "Энерг. щит: #",
-    "Ward: #": "Барьер: #",
-    "Block: #%": "Блок: #%",
-    "variant": "вариант",
-    "corrupted": "осквернено",
-    "synthesised": "синтезирован",
-    "eldritch": "зловещий",
-    "pseudo": "псевдо",
-    "explicit-shaper": "Создатель",
-    "explicit-elder": "Древний",
-    "explicit-crusader": "Крестоносец",
-    "explicit-hunter": "Охотник",
-    "explicit-redeemer": "Избавительница",
-    "explicit-warlord": "Вождь",
-    "explicit-delve": "Спуск",
-    "explicit-veiled": "Завуалирован",
-    "explicit-incursion": "Вмешательство",
-    "Roll is not variable": "Ролл не варьируется",
-    "Elemental damage is not the main source of DPS": "Стихийный урон не основной источник ДПСа",
-    "Physical damage is not the main source of DPS": "Физический урон не основной источник ДПСа",
-    "Filtering by exact Elemental Resistance unreasonably increases the price": "Поиск по точному виду сопротивления необоснованно увеличивает цену",
-    "Crafted Chaos Resistance without Explicit mod has no value": "Крафтовое сопротивление хаосу без \"родного\" свойства не имеет ценности",
-    "Buyer will likely change anointment": "Покупатель, скорее всего, поменяет зачарование",
-    "Select only if price-checking as base item for crafting": "Отмечайте, если проверяете цену в качестве базового предмета для крафта",
-    "1 Empty or Crafted Modifier": "1 свободное или ремесленное свойство",
-    "Select only if item has 6 modifiers (1 of which is crafted) or if it has 5 modifiers": "Выбирайте, только если у предмета 6 свойств (1 из которых ремесленное) или если у него 5 свойств",
-    "First ask yourself: would you buy an item with this stat?": "Сначала спросите себя: купили бы вы предмет с этим модом?"
-  },
-  "cmn-Hant": {
-    "Q {0}%": "品質: {0}%",
-    "DPS: #": "DPS: #",
-    "Elemental DPS: #": "元素 DPS: #",
-    "Physical DPS: #": "物理 DPS: #",
-    "Attacks per Second: #": "攻擊次數/秒: #",
-    "Critical Strike Chance: #%": "暴擊率: #%",
-    "Armour: #": "護甲: #",
-    "Evasion Rating: #": "閃避: #",
-    "Energy Shield: #": "能量護盾: #",
-    "Ward: #": "保護: #",
-    "Block: #%": "格檔: #%",
-    "variant": "種類",
-    "corrupted": "已汙染",
-    "synthesised": "追憶",
-    "eldritch": "異能",
-    "pseudo": "偽屬性",
-    "explicit-shaper": "塑界者",
-    "explicit-elder": "尊師",
-    "explicit-crusader": "聖戰軍王",
-    "explicit-hunter": "狩獵者",
-    "explicit-redeemer": "救贖者",
-    "explicit-warlord": "總督軍",
-    "explicit-delve": "掘獄",
-    "explicit-veiled": "隱匿",
-    "explicit-incursion": "時空穿越",
-    "Roll is not variable": "數值不可變",
-    "Elemental damage is not the main source of DPS": "元素傷害不是主要DPS來源",
-    "Physical damage is not the main source of DPS": "物理傷害不是主要DPS來源",
-    "Filtering by exact Elemental Resistance unreasonably increases the price": "若是精確的使用各元素抗性查詢價格，查詢結果會過高",
-    "Crafted Chaos Resistance without Explicit mod has no value": "單獨的工藝混沌抗性是沒有價值的",
-    "Buyer will likely change anointment": "買家可能會更改塗油",
-    "Select only if price-checking as base item for crafting": "當你只想查詢基底價格的時候才選取",
-    "1 Empty or Crafted Modifier": "1個空詞綴或是工藝詞綴",
-    "Select only if item has 6 modifiers (1 of which is crafted) or if it has 5 modifiers": "當物品有6個詞綴(其中1個是工藝詞綴)，或是5個詞綴才選取",
-    "First ask yourself: would you buy an item with this stat?": "你會買有這樣屬性的物品嗎？"
-  },
-  "zh_CN": {
-    "Q {0}%": "品质: {0}%",
-    "DPS: #": "秒伤: #",
-    "Elemental DPS: #": "元素秒伤: #",
-    "Physical DPS: #": "物理秒伤: #",
-    "Attacks per Second: #": "每秒攻击次数: #",
-    "Critical Strike Chance: #%": "暴击率: #%",
-    "Armour: #": "护甲: #",
-    "Evasion Rating: #": "闪避值: #",
-    "Energy Shield: #": "能量护盾: #",
-    "Ward: #": "结界: #",
-    "Block: #%": "格档: #%",
-    "variant": "种类",
-    "corrupted": "已污染",
-    "synthesised": "忆境",
-    "eldritch": "古灵",
-    "pseudo": "伪属性",
-    "explicit-shaper": "塑界者",
-    "explicit-elder": "裂界者",
-    "explicit-crusader": "圣战者",
-    "explicit-hunter": "狩猎者",
-    "explicit-redeemer": "救赎者",
-    "explicit-warlord": "督军",
-    "explicit-delve": "地心",
-    "explicit-veiled": "隐匿",
-    "explicit-incursion": "穿越",
-    "Roll is not variable": "数值不可变",
-    "Elemental damage is not the main source of DPS": "元素伤害不是主要DPS来源",
-    "Physical damage is not the main source of DPS": "物理伤害不是主要DPS来源",
-    "Filtering by exact Elemental Resistance unreasonably increases the price": "若是精确的使用各元素抗性查询价格，查询结果会过高",
-    "Crafted Chaos Resistance without Explicit mod has no value": "单独的工艺混沌抗性是没有价值的",
-    "Buyer will likely change anointment": "买家可能会更改涂油",
-    "Select only if price-checking as base item for crafting": "当你只想查询基底价格的时候才选取",
-    "1 Empty or Crafted Modifier": "1个空词缀或是工艺词缀",
-    "Select only if item has 6 modifiers (1 of which is crafted) or if it has 5 modifiers": "当物品有6个词缀(其中1个是工艺词缀)，或是5个词缀才选取",
-    "First ask yourself: would you buy an item with this stat?": "你会买有这样属性的物品吗？"
-  }
-}
-</i18n>

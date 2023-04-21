@@ -6,7 +6,7 @@
       <div :class="$style.box">
         <div class="py-2 px-4">
           <div class="text-base">Awakened PoE Trade</div>
-          <p>{{ t('Is ready and running in background') }}</p>
+          <p>{{ t('app_is_ready') }}</p>
         </div>
       </div>
     </div>
@@ -16,14 +16,15 @@
 <script lang="ts">
 import { defineComponent, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { MainProcess } from '@/web/background/IPC'
+import { Host } from '@/web/background/IPC'
+import { AppConfig } from '@/web/Config'
 
 export default defineComponent({
   setup () {
     const show = shallowRef(false)
 
-    MainProcess.onEvent('MAIN->OVERLAY::overlay-attached', () => {
-      if (!show.value) {
+    Host.onEvent('MAIN->OVERLAY::overlay-attached', () => {
+      if (!show.value && AppConfig().showAttachNotification) {
         show.value = true
         setTimeout(() => { show.value = false }, 2500)
       }
@@ -67,18 +68,3 @@ export default defineComponent({
   filter: drop-shadow(2px 4px 6px #000);
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "Is ready and running in background": "Запущен и работает в фоновом режиме"
-  },
-  "cmn-hant": {
-    "Is ready and running in background": "程序已運行"
-  },
-  "zh_CN": {
-    "Is ready and running in background": "程序已运行"
-  }
-
-}
-</i18n>

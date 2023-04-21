@@ -47,6 +47,8 @@ export interface BaseType {
     'GEM'
   )
   icon: string
+  w?: number
+  h?: number
   tradeTag?: string
   tradeDisc?: string
   disc?: {
@@ -93,6 +95,7 @@ export interface TranslationDict {
   RARITY_GEM: string
   RARITY_CURRENCY: string
   RARITY_DIVCARD: string
+  RARITY_QUEST: string
   MAP_TIER: string
   RARITY: string
   ITEM_CLASS: string
@@ -175,7 +178,7 @@ export interface TranslationDict {
   DELVE_MODS: string[]
   VEILED_MODS: string[]
   INCURSION_MODS: string[]
-  RELIC_UNIQUE: string
+  FOIL_UNIQUE: string
   UNMODIFIABLE: string
   // ---
   CHAT_SYSTEM: RegExp

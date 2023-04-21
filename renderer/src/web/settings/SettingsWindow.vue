@@ -9,7 +9,7 @@
   </div>
   <div :class="[$style.patronsHorizontal, { 'invisible': podiumVisible }]" :onMouseenter="showPodium">
     <div class="bg-gray-800 rounded p-1 justify-center text-center w-44 shrink-0 flex items-center">
-      {{ t('App development continues thanks to:') }}
+      {{ t('settings.thank_you') }}
     </div>
     <div class="overflow-x-hidden whitespace-nowrap p-1 text-base">
       <span :class="$style.patronsLine">{{ patronsString[0] }}</span><br>
@@ -17,7 +17,7 @@
     </div>
   </div>
   <div :class="$style.window" class="grow layout-column" :onMouseenter="hidePodium">
-    <app-titlebar @close="cancel" :title="t('Settings - Awakened PoE Trade')" />
+    <app-titlebar @close="cancel" :title="t('settings.title')" />
     <div class="flex grow min-h-0">
       <div class="pl-2 pt-2 bg-gray-900 flex flex-col gap-1" style="min-width: 10rem;">
         <template v-for="item of menuItems">
@@ -26,6 +26,8 @@
           <div v-else
             class="border-b mx-2 border-gray-800" />
         </template>
+        <button v-if="menuItems.length >= 4"
+          :class="$style['quit-btn']" @click="quit">{{ t('app.quit') }}</button>
         <div class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12" style="max-width: fit-content; min-width: 100%;">
           <img class="mx-auto mb-1" src="/images/peepoLove2x.webp">
           {{ t('Support development on') }}<br> <a href="https://patreon.com/awakened_poe_trade" class="inline-flex mt-1" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a>
@@ -49,18 +51,21 @@
 <script lang="ts">
 import { defineComponent, shallowRef, computed, Component, PropType, nextTick, inject, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AppConfig, updateConfig, saveConfig } from '@/web/Config'
+import { AppConfig, updateConfig, saveConfig, pushHostConfig, Config } from '@/web/Config'
 import { APP_PATRONS } from '@/assets/data'
-import type { Config } from '@ipc/types'
+import { Host } from '@/web/background/IPC'
 import type { Widget, WidgetManager } from '@/web/overlay/interfaces'
 import SettingsHotkeys from './hotkeys.vue'
 import SettingsChat from './chat.vue'
 import SettingsGeneral from './general.vue'
+import SettingsAbout from './about.vue'
 import SettingsPricecheck from './price-check.vue'
+import SettingsItemcheck from './item-check.vue'
 import SettingsDebug from './debug.vue'
 import SettingsMaps from './maps/maps.vue'
 import SettingsStashSearch from './stash-search.vue'
 import SettingsStopwatch from './stopwatch.vue'
+import SettingsItemSearch from './item-search.vue'
 
 function shuffle<T> (array: T[]): T[] {
   let currentIndex = array.length
@@ -71,6 +76,13 @@ function shuffle<T> (array: T[]): T[] {
       [array[randomIndex], array[currentIndex]]
   }
   return array
+}
+
+function quit () {
+  Host.sendEvent({
+    name: 'CLIENT->MAIN::user-action',
+    payload: { action: 'quit' }
+  })
 }
 
 export default defineComponent({
@@ -114,11 +126,6 @@ export default defineComponent({
     const configWidget = computed(() => configClone.value?.widgets.find(w => w.wmId === selectedWmId.value))
 
     watch(() => props.config.wmFlags, (wmFlags) => {
-      if (wmFlags.includes('settings:price-check')) {
-        selectedComponent.value = SettingsPricecheck
-        wm.setFlag(props.config.wmId, 'settings:price-check', false)
-        return
-      }
       const flagStr = wmFlags.find(flag => flag.startsWith('settings:widget:'))
       if (flagStr) {
         const _wmId = Number(flagStr.split(':')[2])
@@ -145,11 +152,14 @@ export default defineComponent({
       save () {
         updateConfig(configClone.value!)
         saveConfig()
+        pushHostConfig()
+
         wm.hide(props.config.wmId)
       },
       cancel () {
         wm.hide(props.config.wmId)
       },
+      quit,
       menuItems,
       selectedComponent,
       configClone,
@@ -177,12 +187,18 @@ function menuByType (type?: string) {
       return [[SettingsStashSearch]]
     case 'timer':
       return [[SettingsStopwatch]]
+    case 'item-check':
+      return [[SettingsItemcheck, SettingsMaps]]
+    case 'price-check':
+      return [[SettingsPricecheck]]
+    case 'item-search':
+      return [[SettingsItemSearch]]
     default:
       return [
         [SettingsHotkeys, SettingsChat],
         [SettingsGeneral],
-        [SettingsPricecheck, SettingsMaps],
-        [SettingsDebug]
+        [SettingsPricecheck, SettingsMaps, SettingsItemcheck],
+        [SettingsDebug, SettingsAbout]
       ]
   }
 }
@@ -227,6 +243,17 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   &.active {
     @apply text-gray-400;
     @apply bg-gray-800;
+  }
+}
+
+.quit-btn {
+  @apply text-gray-600;
+  @apply border border-gray-800;
+  @apply p-1 mt-2 mr-2 rounded;
+
+  &:hover {
+    @apply text-red-400;
+    @apply border-red-400;
   }
 }
 
@@ -316,42 +343,3 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   @apply text-2xl;
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "Settings - Awakened PoE Trade": "Настройки - Awakened PoE Trade",
-    "Hotkeys": "Быстрые клавиши",
-    "General": "Общие",
-    "Price check": "Прайс-чек",
-    "Maps": "Карты",
-    "Debug": "Debug",
-    "Chat": "Чат",
-    "Stash search": "Поиск в тайнике",
-    "Stopwatch": "Секундомер",
-    "App development continues thanks to:": "Разработка приложения продолжается благодаря:"
-  },
-  "zh_CN": {
-    "Settings - Awakened PoE Trade": "设置 - Awakened PoE Trade",
-    "Hotkeys": "快捷键",
-    "General": "通用",
-    "Price check": "价格搜索",
-    "Maps": "地图",
-    "Debug": "Debug",
-    "Chat": "聊天",
-    "Stash search": "仓库页搜索",
-    "Stopwatch": "计时器"
-  },
-  "cmn-Hant": {
-    "Settings - Awakened PoE Trade": "設置 - Awakened PoE Trade",
-    "Hotkeys": "快捷鍵",
-    "General": "通用",
-    "Price check": "價格搜索",
-    "Maps": "地圖",
-    "Debug": "Debug",
-    "Chat": "聊天",
-    "Stash search": "倉庫頁搜索",
-    "Stopwatch": "計時器"
-  }
-}
-</i18n>

@@ -7,13 +7,13 @@
       <div class="absolute px-1" :style="actionsPosition" style="background: rgba(0,0,0,0.01);">
         <div :class="$style.actionsPanel">
           <button v-if="hideable" @click="hide"
-            :class="$style.action">{{ t('hide') }}</button>
+            :class="$style.action">{{ t('widget.hide') }}</button>
           <button v-if="!readonly" @click="toggleEdit"
-            :class="[$style.action, { [$style.active]: isEditing }]">{{ t('edit') }}</button>
+            :class="[$style.action, { [$style.active]: isEditing }]">{{ t('widget.edit') }}</button>
           <button v-if="moveHandles !== 'none'" @click="toggleMove"
-            :class="[$style.action, { [$style.active]: isMoving }]">{{ t('move') }}</button>
+            :class="[$style.action, { [$style.active]: isMoving }]">{{ t('widget.move') }}</button>
           <button v-if="removable" @mousedown="startRemoveTimer" @mouseup="cancelRemoveTimer" @mouseleave="cancelRemoveTimer"
-            :class="[$style.action, $style.removable, { [$style.removing]: isRemoving }]">{{ t('delete') }}</button>
+            :class="[$style.action, $style.removable, { [$style.removing]: isRemoving }]">{{ t('widget.delete') }}</button>
         </div>
       </div>
       <div v-if="isMoving">
@@ -158,6 +158,9 @@ export default defineComponent({
     })
 
     const shownHandles = computed(() => {
+      if (Array.isArray(props.moveHandles)) {
+        return props.moveHandles
+      }
       if (!props.moveHandles) {
         return ['tl', 'tc', 'tr', 'cr', 'br', 'bc', 'bl', 'cl', 'cc']
       }
@@ -312,26 +315,3 @@ export default defineComponent({
               0 1px 2px 0 rgba(0, 0, 0, 0.75);
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "hide": "скрыть",
-    "edit": "редактировать",
-    "move": "переместить",
-    "delete": "удалить"
-  },
-  "cmn-Hant": {
-    "hide": "隱藏",
-    "edit": "編輯",
-    "move": "移動",
-    "delete": "刪除"
-  },
-  "zh_CN": {
-    "hide": "隐藏",
-    "edit": "编辑",
-    "move": "移动",
-    "delete": "删除"
-  }
-}
-</i18n>
