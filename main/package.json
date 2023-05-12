@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node build/script.mjs",
     "build": "tsc --noEmit && node build/script.mjs --prod",
-    "package": "electron-builder build"
+    "package": "electron-builder build --publish never"
   },
   "author": {
     "name": "Alexander Drozdov"
