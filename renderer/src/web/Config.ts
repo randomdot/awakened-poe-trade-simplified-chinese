@@ -98,7 +98,6 @@ export interface Config {
   leagueId?: string
   overlayKey: string
   overlayBackground: string
-  overlayBackgroundExclusive: boolean
   overlayBackgroundClose: boolean
   restoreClipboard: boolean
   commands: Array<{
@@ -117,7 +116,6 @@ export interface Config {
   poesessid: string
   widgets: widget.Widget[]
   fontSize: number
-  disableUpdateDownload: boolean
   showAttachNotification: boolean
 }
 
@@ -125,7 +123,6 @@ export const defaultConfig = (): Config => ({
   configVersion: 16,
   overlayKey: 'Shift + Space',
   overlayBackground: 'rgba(129, 139, 149, 0.15)',
-  overlayBackgroundExclusive: true,
   overlayBackgroundClose: true,
   restoreClipboard: false,
   showAttachNotification: true,
@@ -164,7 +161,6 @@ export const defaultConfig = (): Config => ({
   realm: 'pc-ggg',
   poesessid: 'input poesessid',
   fontSize: 16,
-  disableUpdateDownload: false,
   widgets: [
     // --- REQUIRED ---
     {
@@ -662,7 +658,6 @@ function getConfigForHost (): HostConfig {
     gameConfig: config.gameConfig,
     stashScroll: config.stashScroll,
     overlayKey: config.overlayKey,
-    disableUpdateDownload: config.disableUpdateDownload,
     logLevel: config.logLevel,
     windowTitle: config.windowTitle,
     language: config.language
