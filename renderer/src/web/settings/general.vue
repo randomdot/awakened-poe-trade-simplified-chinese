@@ -115,7 +115,7 @@ export default defineComponent({
         set (value) {
           props.config.language = value
           AppConfig().language = value
-          if (value !== 'cmn-Hant') {
+          if (value !== 'cmn-Hant' && value !== 'zh_CN') {
             props.config.realm = 'pc-ggg'
           }
         }

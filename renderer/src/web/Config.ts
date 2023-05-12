@@ -112,8 +112,9 @@ export interface Config {
   logLevel: string
   accountName: string
   stashScroll: boolean
-  language: 'en' | 'ru' | 'cmn-Hant'
-  realm: 'pc-ggg' | 'pc-garena'
+  language: 'en' | 'ru' | 'cmn-Hant' | 'zh_CN'
+  realm: 'pc-ggg' | 'pc-garena' | 'pc-tencent'
+  poesessid: string
   widgets: widget.Widget[]
   fontSize: number
   disableUpdateDownload: boolean
@@ -161,6 +162,7 @@ export const defaultConfig = (): Config => ({
   stashScroll: true,
   language: 'en',
   realm: 'pc-ggg',
+  poesessid: 'input poesessid',
   fontSize: 16,
   disableUpdateDownload: false,
   widgets: [
