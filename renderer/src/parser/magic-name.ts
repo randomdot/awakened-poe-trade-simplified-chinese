@@ -2,8 +2,8 @@ import { AppConfig } from '@/web/Config'
 import { ITEM_BY_REF, ITEM_BY_TRANSLATED } from '@/assets/data'
 
 export function magicBasetype (name: string) {
-  const isLocalized = AppConfig().realm === "pc-tencent"
-  const sep =  isLocalized? '' : ' '
+  const isLocalized = AppConfig().realm === 'pc-tencent'
+  const sep = isLocalized ? '' : ' '
   const words = name.split(sep)
 
   const perm: string[] = words.flatMap((_, start) =>
@@ -14,7 +14,7 @@ export function magicBasetype (name: string) {
       )
   )
 
-  const SEARCH_FUN = isLocalized? ITEM_BY_TRANSLATED : ITEM_BY_REF 
+  const SEARCH_FUN = isLocalized ? ITEM_BY_TRANSLATED : ITEM_BY_REF
   const result = perm
     .map(name => {
       const result = SEARCH_FUN('ITEM', name)

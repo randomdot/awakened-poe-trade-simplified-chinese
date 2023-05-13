@@ -114,7 +114,7 @@ function * _statPlaceholderGenerator (stat: string) {
         idx += 1
         return replacements.includes(idx)
           ? matches[idx].rollStr
-          : '#'//matches[idx].rollStr[0] == '+' ? '+#' : '#'
+          : '#' // matches[idx].rollStr[0] == '+' ? '+#' : '#'
       })
 
       yield {
@@ -124,7 +124,7 @@ function * _statPlaceholderGenerator (stat: string) {
             Array<Pick<typeof matches[number], 'roll' | 'bounds' | 'decimal'>>
       }
 
-      if(matches.length === 1 && matches[idx].rollStr[0] === '+') {
+      if (matches.length === 1 && matches[idx].rollStr[0] === '+') {
         yield {
           stat: replaced.replace('#', '+#'),
           values: matches

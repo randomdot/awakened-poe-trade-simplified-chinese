@@ -92,7 +92,6 @@ export default defineComponent({
       }),
       realm: configModelValue(() => props.config, 'realm'),
       poesessid: configModelValue(() => props.config, 'poesessid'),
-      disableUpdateDownload: configModelValue(() => props.config, 'disableUpdateDownload'),
       restoreClipboard: configModelValue(() => props.config, 'restoreClipboard'),
       showAttachNotification: configModelValue(() => props.config, 'showAttachNotification')
     }
