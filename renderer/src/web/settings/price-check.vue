@@ -7,12 +7,9 @@
       <div v-if="leagues.isLoading.value" class="mb-4">
         <i class="fas fa-info-circle text-gray-600"></i> {{ t('app.leagues_loading') }}</div>
       <template v-else-if="leagues.list.value.length">
-        <div
-          class="mb-2 grid grid-cols-2 gap-x-2 gap-y-1 whitespace-nowrap"
-          style="grid-template-columns: repeat(2, min-content);">
-          <div v-for="league of leagues.list.value" :key="league.id">
-            <ui-radio v-model="leagueId" :value="league.id">{{ league.id }}</ui-radio>
-          </div>
+        <div class="mb-2 flex flex-col gap-1 items-start whitespace-nowrap">
+          <ui-radio v-for="league of leagues.list.value" :key="league.id"
+            v-model="leagueId" :value="league.id">{{ league.id }}</ui-radio>
         </div>
         <div class="flex gap-x-2 mb-4">
           <div class="text-gray-500">{{ t('settings.private_league') }}</div>
@@ -53,71 +50,42 @@
         <ui-radio v-model="searchStatRange" :value="0">{{ t(':fill_roll_exact') }}</ui-radio>
       </div>
     </div>
-    <div class="mb-2">
-      <div class="flex-1 mb-1">{{ t(':min_price') }}</div>
-      <div class="mb-4 flex">
-        <div class="flex mr-6">
-          <input v-model.number="chaosPriceThreshold" class="rounded bg-gray-900 px-1 block w-16 mb-1 font-poe text-center" />
-          <span class="ml-2">{{ t(':min_price_in_chaos') }}</span>
-        </div>
-      </div>
-    </div>
-    <div class="mb-2">
-      <div class="flex-1 mb-1">{{ t(':select_stock') }}</div>
-      <div class="mb-4 flex">
-        <ui-radio v-model="activateStockFilter" :value="true" class="mr-4">{{ t('Yes') }}</ui-radio>
-        <ui-radio v-model="activateStockFilter" :value="false">{{ t('No') }}</ui-radio>
-      </div>
-    </div>
-    <div class="mb-2">
-      <div class="flex-1 mb-1">{{ t(':show_prediction') }} <span class="bg-gray-700 px-1 rounded">www.poeprices.info</span></div>
-      <div class="mb-4 flex">
-        <ui-radio v-model="requestPricePrediction" :value="true" class="mr-4">{{ t('Yes') }}</ui-radio>
-        <ui-radio v-model="requestPricePrediction" :value="false">{{ t('No') }}</ui-radio>
-      </div>
-    </div>
-    <div class="mb-2">
-      <div class="flex-1 mb-1">{{ t(':cursor_pos') }}</div>
-      <div class="mb-4 flex">
-        <ui-radio v-model="showCursor" :value="true" class="mr-4">{{ t('Yes') }}</ui-radio>
-        <ui-radio v-model="showCursor" :value="false">{{ t('No') }}</ui-radio>
-      </div>
-    </div>
-    <div class="mb-6" :class="{ 'p-2 bg-orange-800 rounded': builtinBrowser }">
-      <div class="flex-1 mb-1">{{ t(':enable_browser') }}</div>
-      <div class="flex">
-        <ui-radio v-model="builtinBrowser" :value="true" class="mr-4">{{ t('Yes') }}</ui-radio>
-        <ui-radio v-model="builtinBrowser" :value="false">{{ t('No') }}</ui-radio>
-      </div>
+    <ui-checkbox class="mb-4"
+      v-model="rememberCurrency">{{ t(':remember_currency') }}</ui-checkbox>
+    <ui-checkbox class="mb-4"
+      v-model="activateStockFilter">{{ t(':select_stock') }}</ui-checkbox>
+    <ui-checkbox class="mb-4"
+      v-model="requestPricePrediction">{{ t(':show_prediction') }} <span class="bg-gray-700 px-1 rounded">www.poeprices.info</span></ui-checkbox>
+    <ui-checkbox class="mb-4"
+      v-model="showCursor">{{ t(':cursor_pos') }}</ui-checkbox>
+    <div class="mb-4" :class="{ 'p-2 bg-orange-600 rounded': builtinBrowser }">
+      <ui-checkbox v-model="builtinBrowser">{{ t(':enable_browser') }}</ui-checkbox>
       <div v-if="builtinBrowser" class="mt-1">{{ t(':builtin_browser_warning') }}</div>
     </div>
-    <div class="mb-2 bg-orange-800 p-2 rounded">{{ t(':warn_expensive') }}</div>
-    <div class="mb-2">
-      <div class="flex-1 mb-1">{{ t(':accurate_collapsed') }}</div>
-      <div class="mb-4 flex">
-        <ui-radio v-model="collapseListings" value="api" class="mr-4">{{ t('No') }}</ui-radio>
-        <ui-radio v-model="collapseListings" value="app">{{ t('Yes') }}</ui-radio>
+    <div class="border-2 rounded border-gray-700 mb-2">
+      <div class="bg-gray-700 p-2 mb-2">{{ t(':warn_expensive') }}</div>
+      <ui-checkbox class="mb-4 mx-2" :values="['app', 'api']"
+        v-model="collapseListings">{{ t(':accurate_collapsed') }}</ui-checkbox>
+      <div class="mb-2 mx-2">
+        <div class="flex-1 mb-1">{{ t(':auto_search') }}</div>
+        <div class="mb-4 flex">
+          <ui-toggle v-if="hotkeyQuick"
+            v-model="smartInitialSearch" class="mr-6">
+            <span class="bg-gray-900 text-gray-500 rounded px-2">{{ hotkeyQuick }}</span>
+          </ui-toggle>
+          <ui-toggle v-if="hotkeyLocked"
+            v-model="lockedInitialSearch">
+            <span class="bg-gray-900 text-gray-500 rounded px-2">{{ hotkeyLocked }}</span>
+          </ui-toggle>
+        </div>
       </div>
-    </div>
-    <div class="mb-2" >
-      <div class="flex-1 mb-1">{{ t(':auto_search') }}</div>
-      <div class="mb-4 flex">
-        <ui-toggle v-if="hotkeyQuick"
-          v-model="smartInitialSearch" class="mr-6">
-          <span class="bg-gray-900 text-gray-500 rounded px-2">{{ hotkeyQuick }}</span>
-        </ui-toggle>
-        <ui-toggle v-if="hotkeyLocked"
-          v-model="lockedInitialSearch">
-          <span class="bg-gray-900 text-gray-500 rounded px-2">{{ hotkeyLocked }}</span>
-        </ui-toggle>
-      </div>
-    </div>
-    <div class="mb-2 border p-2 border-gray-600 border-dashed">
-      <div class="flex-1 mb-1">{{ t(':extra_delay') }}</div>
-      <div class="flex">
-        <div class="flex mr-6">
-          <input v-model.number="apiLatencySeconds" class="rounded bg-gray-900 px-1 block w-16 mb-1 font-poe text-center" />
-          <span class="ml-2">{{ t('seconds') }}</span>
+      <div class="mb-2 mx-2">
+        <div class="flex-1 mb-1">{{ t(':extra_delay') }}</div>
+        <div class="flex">
+          <div class="flex mr-6">
+            <input v-model.number="apiLatencySeconds" class="rounded bg-gray-900 px-1 block w-16 mb-1 font-poe text-center" />
+            <span class="ml-2">{{ t('seconds') }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -162,6 +130,7 @@ export default defineComponent({
       hotkeyLocked: computed(() => configWidget.value.hotkeyLocked),
       smartInitialSearch: configModelValue(() => configWidget.value, 'smartInitialSearch'),
       lockedInitialSearch: configModelValue(() => configWidget.value, 'lockedInitialSearch'),
+      rememberCurrency: configModelValue(() => configWidget.value, 'rememberCurrency'),
       searchStatRange: computed<number>({
         get () {
           return configWidget.value.searchStatRange
@@ -172,16 +141,6 @@ export default defineComponent({
           if (value >= 0 && value <= 50) {
             configWidget.value.searchStatRange = value
           }
-        }
-      }),
-      chaosPriceThreshold: computed<number>({
-        get () {
-          return configWidget.value.chaosPriceThreshold
-        },
-        set (value) {
-          if (typeof value !== 'number') return
-
-          configWidget.value.chaosPriceThreshold = value
         }
       }),
       apiLatencySeconds: computed<number>({

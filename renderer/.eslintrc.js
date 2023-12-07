@@ -30,6 +30,11 @@ module.exports = {
     '@typescript-eslint/no-floating-promises': 'off',
     '@typescript-eslint/no-misused-promises': 'off',
     '@typescript-eslint/prefer-reduce-type-parameter': 'off',
+    '@typescript-eslint/no-invalid-void-type': 'off',
+    '@typescript-eslint/consistent-indexed-object-style': 'off',
+    'import/first': 'off',
+    'import/no-duplicates': 'off',
+    'func-call-spacing': 'off',
     // TODO: refactor IPC and enable
     '@typescript-eslint/consistent-type-assertions': 'off'
   },

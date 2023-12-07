@@ -1,3 +1,4 @@
+import { Result, ok, err } from 'neverthrow'
 import {
   CLIENT_STRINGS as _$,
   CLIENT_STRINGS_REF as _$REF,
@@ -21,9 +22,9 @@ type SectionParseResult =
   | 'PARSER_SKIPPED'
 
 type ParserFn = (section: string[], item: ParserState) => SectionParseResult
-type VirtualParserFn = (item: ParserState) => void
+type VirtualParserFn = (item: ParserState) => Result<never, string> | void
 
-export interface ParserState extends ParsedItem {
+interface ParserState extends ParsedItem {
   name: string
   baseType: string | undefined
   infoVariants: BaseType[]
@@ -71,11 +72,51 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   { virtual: calcBasePercentile }
 ]
 
-export function parseClipboard (clipboard: string) {
-  const lines = clipboard.split(/\r?\n/)
+export function parseClipboard (clipboard: string): Result<ParsedItem, string> {
+  try {
+    let sections = itemTextToSections(clipboard)
+
+    if (sections[0][2] === _$.CANNOT_USE_ITEM) {
+      sections[0].pop() // remove CANNOT_USE_ITEM line
+      sections[1].unshift(...sections[0]) // prepend item class & rarity into second section
+      sections.shift() // remove first section where CANNOT_USE_ITEM line was
+    }
+    const parsed = parseNamePlate(sections[0])
+    if (!parsed.isOk()) return parsed
+
+    sections.shift()
+    parsed.value.rawText = clipboard
+
+    // each section can be parsed at most by one parser
+    for (const parser of parsers) {
+      if (typeof parser === 'object') {
+        const error = parser.virtual(parsed.value)
+        if (error) return error
+        continue
+      }
+
+      for (const section of sections) {
+        const result = parser(section, parsed.value)
+        if (result === 'SECTION_PARSED') {
+          sections = sections.filter(s => s !== section)
+          break
+        } else if (result === 'PARSER_SKIPPED') {
+          break
+        }
+      }
+    }
+    return Object.freeze(parsed)
+  } catch (e) {
+    console.log(e)
+    return err('item.parse_error')
+  }
+}
+
+function itemTextToSections (text: string) {
+  const lines = text.split(/\r?\n/)
   lines.pop()
 
-  let sections: string[][] = [[]]
+  const sections: string[][] = [[]]
   lines.reduce((section, line) => {
     if (line !== '--------') {
       section.push(line)
@@ -86,40 +127,7 @@ export function parseClipboard (clipboard: string) {
       return section
     }
   }, sections[0])
-  sections = sections.filter(section => section.length)
-
-  if (sections[0][2] === _$.CANNOT_USE_ITEM) {
-    sections[0].pop() // remove CANNOT_USE_ITEM line
-    sections[1].unshift(...sections[0]) // prepend item class & rarity into second section
-    sections.shift() // remove first section where CANNOT_USE_ITEM line was
-  }
-  const parsed = parseNamePlate(sections[0])
-  if (!parsed) {
-    return null
-  }
-
-  sections.shift()
-  parsed.rawText = clipboard
-
-  // each section can be parsed at most by one parser
-  for (const parser of parsers) {
-    if (typeof parser === 'object') {
-      parser.virtual(parsed)
-      continue
-    }
-
-    for (const section of sections) {
-      const result = parser(section, parsed)
-      if (result === 'SECTION_PARSED') {
-        sections = sections.filter(s => s !== section)
-        break
-      } else if (result === 'PARSER_SKIPPED') {
-        break
-      }
-    }
-  }
-
-  return Object.freeze(parsed)
+  return sections.filter(section => section.length)
 }
 
 function normalizeName (item: ParserState) {
@@ -186,7 +194,7 @@ function findInDatabase (item: ParserState) {
     info = SEARCH_FUN('ITEM', item.baseType ?? item.name)
   }
   if (!info?.length) {
-    throw new Error('UNKNOWN_ITEM')
+    return err('item.unknown')
   }
   if (info[0].unique) {
     const baseType = isLocalized
@@ -276,7 +284,7 @@ function parseNamePlate (section: string[]) {
   if (section.length < 3 ||
       !section[0].startsWith(_$.ITEM_CLASS) ||
       !section[1].startsWith(_$.RARITY)) {
-    return null
+    return err('item.parse_error')
   }
 
   const item: ParserState = {
@@ -320,10 +328,10 @@ function parseNamePlate (section: string[]) {
       item.rarity = ItemRarity.Unique
       break
     default:
-      return null
+      return err('item.unknown')
   }
 
-  return item
+  return ok(item)
 }
 
 function parseInfluence (section: string[], item: ParsedItem) {
@@ -805,7 +813,8 @@ function parseAreaLevel (section: string[], item: ParsedItem) {
   if (
     item.info.refName !== 'Chronicle of Atzoatl' &&
     item.info.refName !== 'Expedition Logbook' &&
-    item.info.refName !== 'Mirrored Tablet'
+    item.info.refName !== 'Mirrored Tablet' &&
+    item.info.refName !== 'Forbidden Tome'
   ) return 'PARSER_SKIPPED'
 
   parseAreaLevelNested(section, item)

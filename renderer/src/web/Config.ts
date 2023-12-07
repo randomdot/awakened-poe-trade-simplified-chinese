@@ -108,7 +108,7 @@ export interface Config {
   clientLog: string | null
   gameConfig: string | null
   windowTitle: string
-  logLevel: string
+  logKeys: boolean
   accountName: string
   stashScroll: boolean
   language: 'en' | 'ru' | 'cmn-Hant' | 'zh_CN'
@@ -154,7 +154,7 @@ export const defaultConfig = (): Config => ({
   clientLog: null,
   gameConfig: null,
   windowTitle: 'Path of Exile',
-  logLevel: 'warn',
+  logKeys: false,
   accountName: '',
   stashScroll: true,
   language: 'en',
@@ -184,7 +184,6 @@ export const defaultConfig = (): Config => ({
       wmWants: 'hide',
       wmZorder: 'exclusive',
       wmFlags: ['hide-on-blur', 'skip-menu'],
-      chaosPriceThreshold: 0,
       showRateLimitState: false,
       apiLatencySeconds: 2,
       collapseListings: 'api',
@@ -198,7 +197,8 @@ export const defaultConfig = (): Config => ({
       showSeller: false,
       searchStatRange: 10,
       showCursor: true,
-      requestPricePrediction: false
+      requestPricePrediction: false,
+      rememberCurrency: false
     } as widget.PriceCheckWidget,
     {
       wmId: 3,
@@ -379,7 +379,7 @@ function upgradeConfig (_config: Config): Config {
 
   if (config.configVersion < 6) {
     config.widgets.find(w => w.wmType === 'price-check')!
-      .showRateLimitState = (config.logLevel === 'debug')
+      .showRateLimitState = ((config as any).logLevel === 'debug')
     config.widgets.find(w => w.wmType === 'price-check')!
       .apiLatencySeconds = 2
 
@@ -533,6 +533,15 @@ function upgradeConfig (_config: Config): Config {
     config.configVersion = 16
   }
 
+  if (config.logKeys === undefined) {
+    config.logKeys = false
+  }
+
+  const priceCheck = config.widgets.find(w => w.wmType === 'price-check') as widget.PriceCheckWidget
+  if (priceCheck.rememberCurrency === undefined) {
+    priceCheck.rememberCurrency = false
+  }
+
   return config as unknown as Config
 }
 
@@ -658,7 +667,7 @@ function getConfigForHost (): HostConfig {
     gameConfig: config.gameConfig,
     stashScroll: config.stashScroll,
     overlayKey: config.overlayKey,
-    logLevel: config.logLevel,
+    logKeys: config.logKeys,
     windowTitle: config.windowTitle,
     language: config.language
   }

@@ -9,7 +9,6 @@ export const SPECIAL_SUPPORT_GEM = ['Empower Support', 'Enlighten Support', 'Enh
 
 interface CreateOptions {
   league: string
-  chaosPriceThreshold: number
   currency: string | undefined
   collapseListings: 'app' | 'api'
   activateStockFilter: boolean
@@ -29,7 +28,6 @@ export function createFilters (
       listed: undefined,
       currency: opts.currency,
       league: opts.league,
-      chaosPriceThreshold: opts.chaosPriceThreshold,
       collapseListings: opts.collapseListings
     }
   }
@@ -83,7 +81,7 @@ export function createFilters (
         disabled: false
       }
     }
-    if (item.info.refName === 'Mirrored Tablet') {
+    if (item.info.refName === 'Mirrored Tablet' || item.info.refName === 'Forbidden Tome') {
       filters.areaLevel = {
         value: item.areaLevel!,
         disabled: false
@@ -149,18 +147,6 @@ export function createFilters (
         disabled: false
       }
     }
-  } else if (
-    item.category === ItemCategory.ClusterJewel &&
-    item.rarity !== ItemRarity.Unique
-  ) {
-    filters.searchExact = {
-      baseType: item.info.name,
-      baseTypeTrade: t(opts, item.info)
-    }
-    filters.searchRelaxed = {
-      category: item.category,
-      disabled: true
-    }
   } else if (item.rarity === ItemRarity.Unique && item.info.unique) {
     filters.searchExact = {
       name: item.info.name,
@@ -173,9 +159,15 @@ export function createFilters (
       baseTypeTrade: t(opts, item.info)
     }
     if (item.category && CATEGORY_TO_TRADE_ID.has(item.category)) {
+      let disabled = opts.exact
+      if (item.category === ItemCategory.ClusterJewel) {
+        disabled = true
+      } else if (item.category === ItemCategory.SanctumRelic) {
+        disabled = false
+      }
       filters.searchRelaxed = {
         category: item.category,
-        disabled: opts.exact
+        disabled: disabled
       }
     }
   }
@@ -254,6 +246,7 @@ export function createFilters (
       item.category !== ItemCategory.HeistBlueprint &&
       item.category !== ItemCategory.HeistContract &&
       item.category !== ItemCategory.MemoryLine &&
+      item.category !== ItemCategory.SanctumRelic &&
       item.info.refName !== 'Expedition Logbook'
     ) {
       if (item.category === ItemCategory.ClusterJewel) {

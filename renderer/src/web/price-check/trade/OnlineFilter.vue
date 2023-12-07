@@ -1,9 +1,9 @@
 <template>
   <ui-popover :delay="[80, null]" placement="bottom-start" boundary="#price-window">
     <template #target>
-      <button class="text-gray-500 rounded mr-1 px-2 truncate">
+      <button class="rounded mr-1 px-2 truncate" :class="showWarning() ? 'text-orange-500' : 'text-gray-500'">
         <span><i class="fas fa-history"></i> {{ t(filters.trade.offline ? 'Offline' : 'Online') }}</span>
-        <span v-if="showLeagueName">, {{ filters.trade.league }}</span>
+        <span v-if="showLeagueName()">, {{ filters.trade.league }}</span>
       </button>
     </template>
     <template #content>
@@ -35,6 +35,7 @@
             <ui-radio class="mt-3" v-model="filters.trade.currency" :value="undefined">{{ t(':currency_any') }}</ui-radio>
             <ui-radio v-model="filters.trade.currency" value="chaos">{{ t(':currency_only_chaos') }}</ui-radio>
             <ui-radio v-model="filters.trade.currency" value="divine">{{ t(':currency_only_div') }}</ui-radio>
+            <ui-radio v-model="filters.trade.currency" value="chaos_divine">{{ t(':currency_chaos_div') }}</ui-radio>
           </template>
         </div>
       </div>
@@ -43,7 +44,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, PropType } from 'vue'
+import { defineComponent, PropType } from 'vue'
 import { useI18nNs } from '@/web/i18n'
 import type { ItemFilters } from '../filters/interfaces'
 import { useLeagues } from '@/web/background/Leagues'
@@ -65,14 +66,13 @@ export default defineComponent({
 
     return {
       t,
-      tradeLeagues: computed(() => {
-        const { isRuthless } = leagues.selected.value!
-        return leagues.list.value.filter(league => {
-          if (!isRuthless && league.isRuthless) return false
-          return true
-        })
-      }),
-      showLeagueName: computed(() => leagues.selectedId.value !== props.filters.trade.league),
+      tradeLeagues: leagues.list,
+      showLeagueName: () => leagues.selectedId.value !== props.filters.trade.league,
+      showWarning: () => Boolean(
+        (props.filters.trade.listed &&
+          ['1day', '3days', '1week'].includes(props.filters.trade.listed)) ||
+        props.filters.trade.currency
+      ),
       onOfflineUpdate (offline: boolean) {
         const { filters } = props
         filters.trade.offline = offline

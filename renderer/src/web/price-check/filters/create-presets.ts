@@ -10,7 +10,6 @@ export function createPresets (
   item: ParsedItem,
   opts: {
     league: string
-    chaosPriceThreshold: number
     currency: string | undefined
     collapseListings: 'app' | 'api'
     activateStockFilter: boolean
@@ -34,6 +33,7 @@ export function createPresets (
     item.isUnidentified ||
     item.rarity === ItemRarity.Normal ||
     (item.category === ItemCategory.Flask && item.rarity !== ItemRarity.Unique) ||
+    (item.category === ItemCategory.SanctumRelic && item.rarity !== ItemRarity.Unique) ||
     item.category === ItemCategory.Map ||
     item.category === ItemCategory.MemoryLine ||
     item.category === ItemCategory.Invitation ||

@@ -11,8 +11,9 @@ interface NinjaDenseInfo {
 }
 
 type PriceDatabase = Array<{ ns: string, url: string, lines: string }>
-const RETRY_TIME = 2 * 60 * 1000
-const UPDATE_TIME = 16 * 60 * 1000
+const RETRY_INTERVAL_MS = 4 * 60 * 1000
+const UPDATE_INTERVAL_MS = 31 * 60 * 1000
+const INTEREST_SPAN_MS = 20 * 60 * 1000
 
 interface DbQuery {
   ns: string
@@ -31,29 +32,44 @@ export const usePoeninja = createGlobalState(() => {
 
   const xchgRate = shallowRef<number | undefined>(undefined)
 
+  const isLoading = shallowRef(false)
   let PRICES_DB: PriceDatabase = []
   let lastUpdateTime = 0
   let downloadController: AbortController | undefined
+  let lastInterestTime = 0
 
   async function load (force: boolean = false) {
     const league = leagues.selected.value
     if (!league || !league.isPopular || league.realm !== 'pc-ggg') return
 
-    if (!force && (Date.now() - lastUpdateTime) < UPDATE_TIME) return
+    if (!force && (
+      (Date.now() - lastUpdateTime) < UPDATE_INTERVAL_MS ||
+      (Date.now() - lastInterestTime) > INTEREST_SPAN_MS
+    )) return
     if (downloadController) downloadController.abort()
 
-    downloadController = new AbortController()
-    const response = await Host.proxy(`poe.ninja/api/data/DenseOverviews?league=${league.id}&language=en`, {
-      signal: downloadController.signal
-    })
-    const jsonBlob = await response.text()
+    try {
+      isLoading.value = true
+      downloadController = new AbortController()
+      const response = await Host.proxy(`poe.ninja/api/data/DenseOverviews?league=${league.id}&language=en`, {
+        signal: downloadController.signal
+      })
+      const jsonBlob = await response.text()
 
-    PRICES_DB = splitJsonBlob(jsonBlob)
-    const divine = findPriceByQuery({ ns: 'ITEM', name: 'Divine Orb', variant: undefined })
-    if (divine && divine.chaos >= 30) {
-      xchgRate.value = divine.chaos
+      PRICES_DB = splitJsonBlob(jsonBlob)
+      const divine = findPriceByQuery({ ns: 'ITEM', name: 'Divine Orb', variant: undefined })
+      if (divine && divine.chaos >= 30) {
+        xchgRate.value = divine.chaos
+      }
+      lastUpdateTime = Date.now()
+    } finally {
+      isLoading.value = false
     }
-    lastUpdateTime = Date.now()
+  }
+
+  function queuePricesFetch () {
+    lastInterestTime = Date.now()
+    load()
   }
 
   function selectedLeagueToUrl (): string {
@@ -114,7 +130,7 @@ export const usePoeninja = createGlobalState(() => {
 
   setInterval(() => {
     load()
-  }, RETRY_TIME)
+  }, RETRY_INTERVAL_MS)
 
   watch(leagues.selectedId, () => {
     xchgRate.value = undefined
@@ -125,7 +141,9 @@ export const usePoeninja = createGlobalState(() => {
   return {
     xchgRate: readonly(xchgRate),
     findPriceByQuery,
-    autoCurrency
+    autoCurrency,
+    queuePricesFetch,
+    initialLoading: () => isLoading.value && !PRICES_DB.length
   }
 })
 
@@ -156,6 +174,8 @@ function splitJsonBlob (jsonBlob: string): PriceDatabase {
     { ns: 'ITEM', url: 'blight-ravaged-maps', type: 'BlightRavagedMap' },
     { ns: 'ITEM', url: 'essences', type: 'Essence' },
     { ns: 'ITEM', url: 'maps', type: 'Map' },
+    { ns: 'ITEM', url: 'tattoos', type: 'Tattoo' },
+    { ns: 'ITEM', url: 'omens', type: 'Omen' },
     { ns: 'DIVINATION_CARD', url: 'divination-cards', type: 'DivinationCard' },
     { ns: 'CAPTURED_BEAST', url: 'beasts', type: 'Beast' },
     { ns: 'UNIQUE', url: 'unique-jewels', type: 'UniqueJewel' },
@@ -164,6 +184,7 @@ function splitJsonBlob (jsonBlob: string): PriceDatabase {
     { ns: 'UNIQUE', url: 'unique-armours', type: 'UniqueArmour' },
     { ns: 'UNIQUE', url: 'unique-accessories', type: 'UniqueAccessory' },
     { ns: 'UNIQUE', url: 'unique-maps', type: 'UniqueMap' },
+    { ns: 'UNIQUE', url: 'unique-relics', type: 'UniqueRelic' },
     { ns: 'GEM', url: 'skill-gems', type: 'SkillGem' }
   ]
 

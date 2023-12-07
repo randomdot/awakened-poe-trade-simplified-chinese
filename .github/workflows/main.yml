@@ -3,10 +3,11 @@ name: Build
 on:
   push:
     branches:
-      - '**'
+      - 'master'
     tags-ignore:
       - '**'
     paths-ignore:
+      - 'docs/**'
       - README.md
 
 jobs:

@@ -1,7 +1,6 @@
 {
   "please_wait": "Please wait\u2026",
   "choose_file": "Choose File",
-  "browse": "Browse",
   "app_is_ready": "Is ready and running in background",
   "reopen_settings": "Press {0} to continue editing.",
   "seconds": "seconds",
@@ -129,7 +128,8 @@
     "heistequipment_heistreward": "Heist Brooch",
     "heistequipment_heistweapon": "Heist Gear",
     "heistequipment_heistutility": "Heist Cloak",
-    "accessory_trinket": "Trinket"
+    "accessory_trinket": "Trinket",
+    "sanctum_relic": "Sanctum Relic"
   },
   "filters": {
     "selected_some": "{0} of {1}, stats",
@@ -149,15 +149,18 @@
     "hide_anointment": "Buyer will likely change anointment",
     "hide_for_crafting": "Select only if price-checking as base item for crafting",
     "hide_empty_mod": "Select only if item has 6 modifiers (1 of which is crafted) or if it has 5 modifiers",
+
     "tag_implicit": "implicit",
     "tag_fractured": "fractured",
     "tag_crafted": "crafted",
     "tag_scourge": "scourge",
+    "tag_enchant": "enchant",
     "tag_variant": "variant",
     "tag_corrupted": "corrupted",
     "tag_synthesised": "synthesised",
     "tag_eldritch": "eldritch",
     "tag_pseudo": "pseudo",
+    "tag_explicit": "explicit",
     "tag_explicit_shaper": "Shaper",
     "tag_explicit_elder": "Elder",
     "tag_explicit_crusader": "Crusader",
@@ -180,7 +183,8 @@
     "listed_2months": "2 Months Ago",
     "currency_any": "Any Currency",
     "currency_only_chaos": "Chaos Orb",
-    "currency_only_div": "Divine Orb"
+    "currency_only_div": "Divine Orb",
+    "currency_chaos_div": "Both Orbs"
   },
   "widget": {
     "title": "widget title",
@@ -291,7 +295,8 @@
     "poe_log_file" :"PoE log file",
     "poe_cfg_file" :"PoE config file",
     "restore_clipboard" :"Restore clipboard",
-    "show_overlay_ready" :"Show a notification when the Overlay detects a PoE window"
+    "show_overlay_ready" :"Show a notification when the Overlay detects a PoE window",
+    "debug_hotkeys": "Record all key presses"
   },
   "price_check": {
     "name": "Price check",
@@ -304,13 +309,12 @@
     "fill_rolls": "Fill stat values",
     "fill_roll_exact": "Exact value",
     "cursor_pos": "Show memorized cursor position",
-    "min_price": "Minimum buyout price",
-    "min_price_in_chaos": "Chaos Orbs",
     "extra_delay": "Extra time to prevent spurious Rate limiting",
     "warn_expensive": "Settings below are a compromise between increasing load on PoE website and convenient price checking / more accurate search.",
     "accurate_collapsed": "Show indication on collapsed listings",
     "auto_search": "Perform an auto search, when pressing",
     "select_stock": "Always select \"Stock\" filter",
-    "show_prediction": "Show price prediction"
+    "show_prediction": "Show price prediction",
+    "remember_currency": "Remember the Buyout Currency filter"
   }
 }

@@ -2,6 +2,7 @@
 
 import { app } from 'electron'
 import { uIOhook } from 'uiohook-napi'
+import os from 'node:os'
 import { startServer, eventPipe, server } from './server'
 import { Logger } from './RemoteLogger'
 import { GameWindow } from './windowing/GameWindow'
@@ -39,14 +40,16 @@ app.on('ready', async () => {
       const shortcuts = await Shortcuts.create(logger, overlay, poeWindow, gameConfig, eventPipe)
       eventPipe.onEventAnyClient('CLIENT->MAIN::update-host-config', (cfg) => {
         overlay.updateOpts(cfg.overlayKey, cfg.windowTitle)
-        shortcuts.updateActions(cfg.shortcuts, cfg.stashScroll, cfg.restoreClipboard, cfg.language)
+        shortcuts.updateActions(cfg.shortcuts, cfg.stashScroll, cfg.logKeys, cfg.restoreClipboard, cfg.language)
         gameLogWatcher.restart(cfg.clientLog)
         gameConfig.readConfig(cfg.gameConfig)
         appUpdater.checkAtStartup()
         tray.overlayKey = cfg.overlayKey
       })
       uIOhook.start()
-      const port = await startServer(appUpdater)
+      const port = await startServer(appUpdater, logger)
+      // TODO: move up (currently crashes)
+      logger.write(`info ${os.type()} ${os.release} / v${app.getVersion()}`)
       overlay.loadAppPage(port)
       tray.serverPort = port
     },

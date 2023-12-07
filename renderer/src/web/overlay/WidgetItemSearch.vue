@@ -1,20 +1,21 @@
 <template>
-  <widget :config="config" :move-handles="['tl', 'bl']" :removable="false" :inline-edit="false">
+  <Widget :config="config" :move-handles="['tl', 'bl']" :removable="false" :inline-edit="false">
     <div class="widget-default-style flex flex-col p-1 gap-1" style="min-width: 24rem;">
       <transition-group v-if="starred.length" tag="div"
         :enter-active-class="$style.starredItemEnter"
-        class="flex gap-x-1 py-1 pr-1 bg-gray-800 rounded">
-        <div v-for="item in starred" :key="item.name + item.discr"
-          :class="$style.starredItem">
-          <item-quick-price
-            :item-img="item.icon"
+        class="flex gap-x-1 bg-gray-800 rounded">
+        <button v-for="item in starred" :key="item.info.refName + item.discr"
+          :class="$style.starredItem"
+          @click="starredItemClick($event, item)">
+          <ItemQuickPrice
+            :item-img="item.info.icon"
             :price="item.price"
             currency-text
-          ></item-quick-price>
-          <div class="ml-1 truncate" style="max-width: 7rem;">{{ item.name }}</div>
+          ></ItemQuickPrice>
+          <div class="ml-1 truncate" style="max-width: 7rem;">{{ item.info.name }}</div>
           <div v-if="item.discr"
             class="ml-1 truncate" style="max-width: 7rem;">{{ t(item.discr) }}</div>
-        </div>
+        </button>
       </transition-group>
       <ui-timeout v-if="!showSearch"
         ref="showTimeout"
@@ -24,7 +25,7 @@
         <div class="flex gap-x-1 p-1">
           <input type="text" :placeholder="t(':input')" class="rounded bg-gray-900 px-1 flex-1"
             v-model="searchValue">
-          <button @click="clearItems" class="btn"><i class="fas fa-times" /> {{ t(':reset') }}</button>
+          <button @click="clearSelectedItems" class="btn"><i class="fas fa-times" /> {{ t(':reset') }}</button>
         </div>
         <div class="flex gap-x-2 px-2 mb-px1 py-1">
           <span>{{ t(':heist_target') }}</span>
@@ -62,24 +63,18 @@
         </div>
       </div>
     </div>
-  </widget>
+  </Widget>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, shallowRef, ref, computed, nextTick, inject } from 'vue'
-import { useI18nNs } from '@/web/i18n'
+import { ref } from 'vue'
 import { distance } from 'fastest-levenshtein'
-import { ItemSearchWidget, WidgetManager } from './interfaces'
-import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
-import Widget from './Widget.vue'
-import { BaseType, ITEMS_ITERATOR, CLIENT_STRINGS as _$, ALTQ_GEM_NAMES, ITEM_BY_TRANSLATED } from '@/assets/data'
+import { BaseType, ITEM_BY_TRANSLATED, CLIENT_STRINGS as _$, ALTQ_GEM_NAMES, REPLICA_UNIQUE_NAMES } from '@/assets/data'
 import { AppConfig } from '@/web/Config'
-import { usePoeninja, CurrencyValue } from '@/web/background/Prices'
-import { Host } from '@/web/background/IPC'
+import { CurrencyValue } from '@/web/background/Prices'
 
 interface SelectedItem {
-  name: string
-  icon: string
+  info: BaseType
   discr?: string
   chaos?: number
   price?: CurrencyValue
@@ -90,7 +85,7 @@ function useSelectedItems () {
 
   function addItem (newItem: SelectedItem) {
     if (items.value.some(item =>
-      item.name === newItem.name &&
+      item.info.name === newItem.info.name &&
       item.discr === newItem.discr
     )) return false
 
@@ -114,37 +109,30 @@ function useSelectedItems () {
 
 function findItems (opts: {
   search: string
-  jsonIncludes: string[]
-  matchFn: (item: BaseType) => boolean
+  namespace: 'GEM' | 'UNIQUE'
+  itemNames: () => Generator<string>
 }): BaseType[] | false {
   const isCJK = (AppConfig().language === 'cmn-Hant' || AppConfig().language === 'zh_CN')
   const minSearchLimit = isCJK ? 1 : 3
   const search = opts.search.trim()
   const lcSearch = search.toLowerCase().split(/\s+/).sort((a, b) => b.length - a.length)
-  if (search.length < minSearchLimit) return false
-  const out = []
   const lcLongestWord = lcSearch[0]
-  const jsonSearch = !isCJK
-    ? lcLongestWord.slice(1) // in non-CJK first letter should be in first utf16 code unit
-    : lcLongestWord
-  const MAX_HITS = 70 // NOTE: based on first word only, so don't be too strict
-  const MAX_RESULTS_VISIBLE = 5 // NOTE: don't want to pick from too many results
-  const MAX_RESULTS = 10
-  let hits = 0
-  for (const match of ITEMS_ITERATOR(jsonSearch, opts.jsonIncludes)) {
-    hits += 1
-    const lcName = match.name.toLowerCase()
+  if (search.length < minSearchLimit) return false
+
+  const MAX_RESULTS = 5 // NOTE: don't want to pick from too many results
+  const out = []
+  for (const itemName of opts.itemNames()) {
+    const lcName = itemName.toLowerCase()
     if (
-      opts.matchFn(match) &&
       lcSearch.every(part => lcName.includes(part)) &&
       (isCJK || lcName.split(/\s+/).some(part => part.startsWith(lcLongestWord)))
     ) {
-      out.push(match)
+      const match = ITEM_BY_TRANSLATED(opts.namespace, itemName)
+      out.push(...match ?? [])
       if (out.length > MAX_RESULTS) return false
     }
-    if (hits >= MAX_HITS) return false
   }
-  return out.slice(0, MAX_RESULTS_VISIBLE)
+  return out
 }
 
 function fuzzyFindHeistGem (badStr: string) {
@@ -175,109 +163,132 @@ function fuzzyFindHeistGem (badStr: string) {
   }
   return bestMatch!
 }
+</script>
 
-export default defineComponent({
-  components: { Widget, ItemQuickPrice },
-  props: {
-    config: {
-      type: Object as PropType<ItemSearchWidget>,
-      required: true
-    }
-  },
-  setup (props) {
-    const wm = inject<WidgetManager>('wm')!
-    const { t } = useI18nNs('item_search')
-    const { findPriceByQuery, autoCurrency } = usePoeninja()
+<script setup lang="ts">
+import { shallowRef, computed, nextTick, inject } from 'vue'
+import { useI18nNs } from '@/web/i18n'
+import { ItemSearchWidget, WidgetManager } from './interfaces'
+import { usePoeninja } from '@/web/background/Prices'
+import { Host } from '@/web/background/IPC'
+import { type ParsedItem, createVirtualItem, ItemRarity } from '@/parser/ParsedItem'
+import { ItemCategory } from '@/parser'
 
-    const showTimeout = shallowRef<{ reset:() => void } | null>(null)
+import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
+import Widget from './Widget.vue'
 
-    nextTick(() => {
-      props.config.wmFlags = ['invisible-on-blur']
-    })
+const props = defineProps<{
+  config: ItemSearchWidget
+}>()
 
-    const searchValue = shallowRef('')
-    const { items: starred, addItem, clearItems } = useSelectedItems()
+const wm = inject<WidgetManager>('wm')!
+const { t } = useI18nNs('item_search')
+const { findPriceByQuery, autoCurrency, queuePricesFetch } = usePoeninja()
 
-    const typeFilter = shallowRef<'gem' | 'replica'>('gem')
+const showTimeout = shallowRef<{ reset:() => void } | null>(null)
 
-    Host.onEvent('MAIN->CLIENT::ocr-text', (e) => {
-      if (e.target !== 'heist-gems') return
+nextTick(() => {
+  props.config.wmFlags = ['invisible-on-blur']
+})
 
-      for (const para of e.paragraphs) {
-        const res = fuzzyFindHeistGem(para)
-        selectItem(
-          ITEM_BY_TRANSLATED('GEM', res.name)![0],
-          { altQuality: res.altQuality, withTimeout: true }
-        )
-      }
-    })
+const searchValue = shallowRef('')
+const { items: starred, addItem, clearItems } = useSelectedItems()
 
-    function selectItem (item: BaseType, opts: { altQuality?: string, unique?: true, withTimeout?: true }) {
-      let price: ReturnType<typeof findPriceByQuery>
-      if (opts.altQuality) {
-        price = findPriceByQuery({
-          ns: item.namespace,
-          name: `${opts.altQuality} ${item.refName}`,
-          variant: '1'
-        })
-      } else {
-        price = findPriceByQuery({
-          ns: item.namespace,
-          name: item.refName,
-          variant: item.unique!.base
-        })
-      }
-      const isAdded = addItem({
-        name: item.name,
-        icon: item.icon,
-        discr: opts.altQuality,
-        chaos: price?.chaos,
-        price: (price != null) ? autoCurrency(price.chaos) : undefined
-      })
-      if (isAdded && opts.withTimeout) {
-        showTimeout.value?.reset()
-        props.config.wmFlags = []
-      }
-      searchValue.value = ''
-    }
+const typeFilter = shallowRef<'gem' | 'replica'>('gem')
 
-    return {
-      t,
-      searchValue,
-      typeFilter,
-      results: computed(() => {
-        if (typeFilter.value === 'gem') {
-          return findItems({
-            search: searchValue.value,
-            jsonIncludes: ['GEM'],
-            matchFn: (item) => Boolean(
-              item.namespace === 'GEM' &&
-              item.gem!.altQuality?.length)
-          })
-        } else {
-          return findItems({
-            search: searchValue.value,
-            jsonIncludes: ['UNIQUE', 'Replica '],
-            matchFn: (item) => Boolean(
-              item.namespace === 'UNIQUE' &&
-              item.refName.startsWith('Replica '))
-          })
-        }
-      }),
-      selectItem,
-      clearItems () {
-        clearItems()
-        props.config.wmFlags = ['invisible-on-blur']
-      },
-      starred,
-      showSearch: wm.active,
-      showTimeout,
-      makeInvisible () {
-        props.config.wmFlags = ['invisible-on-blur']
-      }
-    }
+Host.onEvent('MAIN->CLIENT::ocr-text', (e) => {
+  if (e.target !== 'heist-gems') return
+
+  for (const para of e.paragraphs) {
+    const res = fuzzyFindHeistGem(para)
+    selectItem(
+      ITEM_BY_TRANSLATED('GEM', res.name)![0],
+      { altQuality: res.altQuality, withTimeout: true }
+    )
   }
 })
+
+function selectItem (item: BaseType, opts: { altQuality?: string, unique?: true, withTimeout?: true }) {
+  queuePricesFetch()
+
+  let price: ReturnType<typeof findPriceByQuery>
+  if (opts.altQuality) {
+    price = findPriceByQuery({
+      ns: item.namespace,
+      name: `${opts.altQuality} ${item.refName}`,
+      variant: '1'
+    })
+  } else {
+    price = findPriceByQuery({
+      ns: item.namespace,
+      name: item.refName,
+      variant: item.unique!.base
+    })
+  }
+  const isAdded = addItem({
+    info: item,
+    discr: opts.altQuality,
+    chaos: price?.chaos,
+    price: (price != null) ? autoCurrency(price.chaos) : undefined
+  })
+  if (isAdded && opts.withTimeout) {
+    showTimeout.value?.reset()
+    props.config.wmFlags = []
+  }
+  searchValue.value = ''
+}
+
+const results = computed(() => {
+  if (typeFilter.value === 'gem') {
+    return findItems({
+      search: searchValue.value,
+      namespace: 'GEM',
+      itemNames: ALTQ_GEM_NAMES
+    })
+  } else {
+    return findItems({
+      search: searchValue.value,
+      namespace: 'UNIQUE',
+      itemNames: REPLICA_UNIQUE_NAMES
+    })
+  }
+})
+
+function clearSelectedItems () {
+  clearItems()
+  props.config.wmFlags = ['invisible-on-blur']
+}
+
+const showSearch = wm.active
+
+function makeInvisible () {
+  props.config.wmFlags = ['invisible-on-blur']
+}
+
+function starredItemClick (e: MouseEvent, item: SelectedItem) {
+  const parsed = (item.info.namespace === 'GEM')
+    ? createVirtualItem({
+      category: ItemCategory.Gem,
+      info: item.info,
+      gemAltQuality: item.discr as ParsedItem['gemAltQuality'],
+      gemLevel: 1
+    })
+    : createVirtualItem({
+      rarity: ItemRarity.Unique,
+      info: item.info
+    })
+
+  Host.selfDispatch({
+    name: 'MAIN->CLIENT::item-text',
+    payload: {
+      clipboard: parsed.rawText,
+      item: parsed,
+      position: { x: e.clientX, y: e.clientY },
+      focusOverlay: true,
+      target: 'price-check'
+    }
+  })
+}
 </script>
 
 <style lang="postcss" module>
@@ -304,7 +315,11 @@ export default defineComponent({
 .starredItem {
   display: flex;
   flex-direction: column;
-  @apply rounded px-1;
+  @apply rounded px-1 pb-1 pt-0.5;
+
+  &:hover {
+    @apply bg-gray-700;
+  }
 }
 
 @keyframes starredItemEnter {
