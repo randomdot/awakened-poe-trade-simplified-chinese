@@ -43,6 +43,7 @@ const updateInfo = computed(() => {
 const leagues = useLeagues()
 
 function openCaptcha () {
-  showBrowser(`https://${poeWebApi()}/api/leagues?type=main&realm=pc&compact=1`)
+//  showBrowser(`https://${poeWebApi()}/api/leagues?type=main&realm=pc&compact=1`)
+  showBrowser(`https://${poeWebApi()}/login`)
 }
 </script>

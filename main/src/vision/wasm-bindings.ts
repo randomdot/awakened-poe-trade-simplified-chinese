@@ -8,7 +8,8 @@ export let cv: any
 const langMap = new Map([
   ['en', 'eng'],
   ['ru', 'rus'],
-  // ['cmn-Hant', 'chi_tra'],
+  ['cmn-Hant', 'chi_tra'],
+  ['zh_cn', 'cn']
 ])
 
 export async function init (binDir: string) {

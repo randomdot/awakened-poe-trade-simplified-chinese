@@ -8,6 +8,7 @@ export const PROXY_HOSTS = [
   { host: 'web.poe.garena.tw', official: true },
   { host: 'poe.ninja', official: false },
   { host: 'www.poeprices.info', official: false },
+  { host: 'poe.game.qq.com', official: true },
 ]
 
 export class HttpProxy {
