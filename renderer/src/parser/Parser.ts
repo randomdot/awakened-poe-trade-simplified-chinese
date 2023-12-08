@@ -72,10 +72,14 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   { virtual: calcBasePercentile }
 ]
 
+var IS_LOCALIED = false // AppConfig().realm === 'pc-tencent'
+var _$RT = _$
+
 export function parseClipboard (clipboard: string): Result<ParsedItem, string> {
   try {
     let sections = itemTextToSections(clipboard)
-
+    IS_LOCALIED = AppConfig().realm === 'pc-tencent'
+    _$RT = IS_LOCALIED?_$ : _$REF
     if (sections[0][2] === _$.CANNOT_USE_ITEM) {
       sections[0].pop() // remove CANNOT_USE_ITEM line
       sections[1].unshift(...sections[0]) // prepend item class & rarity into second section
@@ -137,8 +141,8 @@ function normalizeName (item: ParserState) {
       item.name = baseType
     }
   }
-  const isLocalized = AppConfig().realm === 'pc-tencent'
-  const _$RT = isLocalized ? _$ : _$REF
+  // const isLocalized = AppConfig().realm === 'pc-tencent'
+  // const _$RT = isLocalized ? _$ : _$REF
 
   if (item.rarity === ItemRarity.Normal ||
       item.rarity === ItemRarity.Rare
@@ -174,8 +178,7 @@ function normalizeName (item: ParserState) {
 }
 
 function findInDatabase (item: ParserState) {
-  const isLocalized = AppConfig().realm === 'pc-tencent'
-  const SEARCH_FUN = isLocalized ? ITEM_BY_TRANSLATED : ITEM_BY_REF
+  const SEARCH_FUN = IS_LOCALIED ? ITEM_BY_TRANSLATED : ITEM_BY_REF
 
   let info: BaseType[] | undefined
   if (item.category === ItemCategory.DivinationCard) {
@@ -197,7 +200,7 @@ function findInDatabase (item: ParserState) {
     return err('item.unknown')
   }
   if (info[0].unique) {
-    const baseType = isLocalized
+    const baseType = IS_LOCALIED
       ? ITEM_BY_TRANSLATED('ITEM', item.baseType ?? item.name)![0].refName
       : item.baseType
     info = info.filter(info => info.unique!.base === baseType)
@@ -456,8 +459,8 @@ function parseGem (section: string[], item: ParsedItem) {
 
 function parseGemAltQuality (item: ParserState) {
   if (item.category !== ItemCategory.Gem) return
-  const isLocalized = AppConfig().realm === 'pc-tencent'
-  const _$RT = isLocalized ? _$ : _$REF
+  // const isLocalized = AppConfig().realm === 'pc-tencent'
+  // const _$RT = isLocalized ? _$ : _$REF
 
   let gemName: string | undefined
   if ((gemName = _$RT.QUALITY_ANOMALOUS.exec(item.name)?.[1])) {
@@ -724,8 +727,8 @@ function parseSynthesised (section: string[], item: ParserState) {
   if (section.length === 1) {
     if (section[0] === _$.SECTION_SYNTHESISED) {
       item.isSynthesised = true
-      const isLocalized = AppConfig().realm === 'pc-tencent'
-      const _$RT = isLocalized ? _$ : _$REF
+      // const isLocalized = AppConfig().realm === 'pc-tencent'
+      // const _$RT = isLocalized ? _$ : _$REF
 
       if (item.baseType) {
         item.baseType = _$RT.ITEM_SYNTHESISED.exec(item.baseType)![1]
@@ -746,8 +749,8 @@ function parseSuperior (item: ParserState) {
     (item.rarity === ItemRarity.Rare && item.isUnidentified) ||
     (item.rarity === ItemRarity.Unique && item.isUnidentified)
   ) {
-    const isLocalized = AppConfig().realm === 'pc-tencent'
-    const _$RT = isLocalized ? _$ : _$REF
+    // const isLocalized = AppConfig().realm === 'pc-tencent'
+    // const _$RT = isLocalized ? _$ : _$REF
     if (_$RT.ITEM_SUPERIOR.test(item.name)) {
       item.name = _$RT.ITEM_SUPERIOR.exec(item.name)![1]
     }
