@@ -5,7 +5,7 @@ import { Host } from './IPC'
 
 // pc-ggg, pc-garena
 // const PERMANENT_SC = ['Standard', '標準模式']
-const PERMANENT_HC = ['Hardcore', '專家模式']
+const PERMANENT_HC = ['Hardcore', '專家模式', '专家模式']
 
 interface ApiLeague {
   id: string
