@@ -20,7 +20,7 @@ import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLeagues } from '@/web/background/Leagues'
 import { Host } from '@/web/background/IPC'
-import { poeWebApi } from '@/web/Config'
+import { AppConfig, poeWebApi } from '@/web/Config'
 
 const showBrowser = inject<(url: string) => void>('builtin-browser')!
 
@@ -43,7 +43,6 @@ const updateInfo = computed(() => {
 const leagues = useLeagues()
 
 function openCaptcha () {
-//  showBrowser(`https://${poeWebApi()}/api/leagues?type=main&realm=pc&compact=1`)
-  showBrowser(`https://${poeWebApi()}/login`)
+  showBrowser(`https://${poeWebApi()}` + AppConfig().realm == "pc-tencent" ? '/login' : `/api/leagues?type=main&realm=pc&compact=1`)
 }
 </script>

@@ -12,7 +12,7 @@
   }, 
   "repository": {
     "type": "git",
-    "url": "https://github.com/SnosMe/awakened-poe-trade.git"
+    "url": "https://github.com/randomdot/awakened-poe-trade-simplified-chinese"
   },
   "main": "dist/main.js",
   "dependencies": {
