@@ -72,14 +72,16 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   { virtual: calcBasePercentile }
 ]
 
-var IS_LOCALIED = false // AppConfig().realm === 'pc-tencent'
+var IS_LOCALIZED = false // AppConfig().realm === 'pc-tencent'
 var _$RT = _$
+var SEARCH_FUN = ITEM_BY_REF
 
 export function parseClipboard (clipboard: string): Result<ParsedItem, string> {
   try {
     let sections = itemTextToSections(clipboard)
-    IS_LOCALIED = AppConfig().realm === 'pc-tencent'
-    _$RT = IS_LOCALIED?_$ : _$REF
+    IS_LOCALIZED = AppConfig().realm === 'pc-tencent'
+    _$RT = IS_LOCALIZED ? _$ : _$REF
+    SEARCH_FUN = IS_LOCALIZED ? ITEM_BY_TRANSLATED : ITEM_BY_REF
     if (sections[0][2] === _$.CANNOT_USE_ITEM) {
       sections[0].pop() // remove CANNOT_USE_ITEM line
       sections[1].unshift(...sections[0]) // prepend item class & rarity into second section
@@ -178,8 +180,6 @@ function normalizeName (item: ParserState) {
 }
 
 function findInDatabase (item: ParserState) {
-  const SEARCH_FUN = IS_LOCALIED ? ITEM_BY_TRANSLATED : ITEM_BY_REF
-
   let info: BaseType[] | undefined
   if (item.category === ItemCategory.DivinationCard) {
     info = SEARCH_FUN('DIVINATION_CARD', item.name)
@@ -200,7 +200,7 @@ function findInDatabase (item: ParserState) {
     return err('item.unknown')
   }
   if (info[0].unique) {
-    const baseType = IS_LOCALIED
+    const baseType = IS_LOCALIZED
       ? ITEM_BY_TRANSLATED('ITEM', item.baseType ?? item.name)![0].refName
       : item.baseType
     info = info.filter(info => info.unique!.base === baseType)

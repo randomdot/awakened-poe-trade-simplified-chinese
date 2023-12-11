@@ -19,7 +19,7 @@
     <div class="mb-4" v-if="language === 'zh_CN'">
       <div class="flex-1 mb-1">{{ t('Realm') }}</div>
       <div class="flex gap-x-4">
-        <ui-radio v-model="realm" value="pc-ggg">{{ t('International') }}</ui-radio>
+        <ui-radio v-model="realm" value="pc-ggg">{{ t('realm_intl') }}</ui-radio>
         <ui-radio v-model="realm" value="pc-tencent">{{ t('tencent') }}</ui-radio>
         <div class="flex gap-x-1" v-show="realm === 'pc-tencent'">
           <div :class="{ 'text-red-500': poesessid.length !== 32 }">{{ t('POESESSID') }}</div>

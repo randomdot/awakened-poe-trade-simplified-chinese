@@ -77,6 +77,7 @@ export async function initConfig () {
   }
 
   updateConfig(upgradeConfig(config))
+  pushHostConfig()
 }
 
 export function poeWebApi () {
@@ -669,6 +670,8 @@ function getConfigForHost (): HostConfig {
     overlayKey: config.overlayKey,
     logKeys: config.logKeys,
     windowTitle: config.windowTitle,
-    language: config.language
+    language: config.language,
+    realm: config.realm,
+    poesessid: config.poesessid
   }
 }

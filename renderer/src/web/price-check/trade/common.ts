@@ -22,7 +22,7 @@ export type TradeResponse<T> = (T & { error?: null }) | {
 }
 
 export function apiToSatisfySearch (item: ParsedItem, stats: StatFilter[], filters: ItemFilters): 'trade' | 'bulk' {
-  if (stats.some(s => !s.disabled)) {
+  if (stats.some(s => !s.disabled) || AppConfig().realm === 'pc-tencent') {
     return 'trade'
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "awakened-poe-trade",
-  "version": "3.22.10004",
+  "version": "3.22.10005",
   "private": true,
   "scripts": {
     "dev": "node build/script.mjs",
@@ -9,10 +9,10 @@
   },
   "author": {
     "name": "Alexander Drozdov"
-  },
+  }, 
   "repository": {
     "type": "git",
-    "url": "https://github.com/SnosMe/awakened-poe-trade.git"
+    "url": "https://github.com/randomdot/awakened-poe-trade-simplified-chinese"
   },
   "main": "dist/main.js",
   "dependencies": {

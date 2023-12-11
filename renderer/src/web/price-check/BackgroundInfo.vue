@@ -43,7 +43,7 @@ const updateInfo = computed(() => {
 const leagues = useLeagues()
 
 function openCaptcha () {
-  const captchaUrl = AppConfig().realm === 'pc-tencent' ? `https://${poeWebApi()}/login` : `https://${poeWebApi()}/api/leagues?type=main&realm=pc&compact=1`
-  showBrowser(captchaUrl)
+  // showBrowser(`https://${poeWebApi()}` + AppConfig().realm == "pc-tencent" ? '/login' : `/api/leagues?type=main&realm=pc&compact=1`)
+  showBrowser(`https://${poeWebApi()}/api/leagues?type=main&realm=pc&compact=1`)
 }
 </script>

@@ -1,7 +1,7 @@
 import { CLIENT_STRINGS as _$, STAT_BY_MATCH_STR } from '@/assets/data'
 import type { StatMatcher, Stat } from '@/assets/data'
 import type { ModifierType } from './modifiers'
-
+import { AppConfig } from '@/web/Config'
 // This file is a little messy and scary,
 // but that's how stats translations are parsed :-D
 
@@ -123,11 +123,12 @@ function * _statPlaceholderGenerator (stat: string) {
           .filter((_, idx) => !replacements.includes(idx)) as
             Array<Pick<typeof matches[number], 'roll' | 'bounds' | 'decimal'>>
       }
-
-      if (matches.length === 1 && matches[idx].rollStr[0] === '+') {
-        yield {
-          stat: replaced.replace('#', '+#'),
-          values: matches
+      if (AppConfig().realm !== 'pc-tencent') {
+        if (matches.length === 1 && matches[idx].rollStr[0] === '+') {
+          yield {
+            stat: replaced.replace('#', '+#'),
+            values: matches
+          }
         }
       }
     }
