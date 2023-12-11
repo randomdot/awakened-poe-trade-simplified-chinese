@@ -21,6 +21,12 @@ win:
 linux:
   target:
   - "AppImage"
+mac:
+  target:
+  - target: "dmg"
+    arch:
+    - "universal"
+  identity: null
 appImage:
   executableArgs:
   - "--sandbox"
