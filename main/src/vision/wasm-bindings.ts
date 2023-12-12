@@ -9,7 +9,7 @@ const langMap = new Map([
   ['en', 'eng'],
   ['ru', 'rus'],
   ['cmn-Hant', 'chi_tra'],
-  ['zh_cn', 'cn']
+  ['zh_CN', 'cn']
 ])
 
 export async function init (binDir: string) {
