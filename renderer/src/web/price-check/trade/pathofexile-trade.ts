@@ -46,7 +46,9 @@ export const CATEGORY_TO_TRADE_ID = new Map([
   [ItemCategory.HeistGear, 'heistequipment.heistweapon'],
   [ItemCategory.HeistCloak, 'heistequipment.heistutility'],
   [ItemCategory.Trinket, 'accessory.trinket'],
-  [ItemCategory.SanctumRelic, 'sanctum.relic']
+  [ItemCategory.SanctumRelic, 'sanctum.relic'],
+  [ItemCategory.Tincture, 'azmeri.tincture'],
+  [ItemCategory.Charm, 'azmeri.charm']
 ])
 
 const TOTAL_MODS_TEXT = {
@@ -126,7 +128,6 @@ interface TradeRequest { /* eslint-disable camelcase */
           mirrored?: FilterBoolean
           identified?: FilterBoolean
           stack_size?: FilterRange
-          gem_alternate_quality?: { option: '0' | '1' | '2' | '3' }
         }
       }
       armour_filters?: {
@@ -358,23 +359,6 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[], i
 
   if (filters.unidentified && !filters.unidentified.disabled) {
     propSet(query.filters, 'misc_filters.filters.identified.option', String(false))
-  }
-
-  if (filters.altQuality && !filters.altQuality.disabled) {
-    switch (filters.altQuality.value) {
-      case 'Superior':
-        propSet(query.filters, 'misc_filters.filters.gem_alternate_quality.option', '0')
-        break
-      case 'Anomalous':
-        propSet(query.filters, 'misc_filters.filters.gem_alternate_quality.option', '1')
-        break
-      case 'Divergent':
-        propSet(query.filters, 'misc_filters.filters.gem_alternate_quality.option', '2')
-        break
-      case 'Phantasmal':
-        propSet(query.filters, 'misc_filters.filters.gem_alternate_quality.option', '3')
-        break
-    }
   }
 
   if (filters.areaLevel && !filters.areaLevel.disabled) {
