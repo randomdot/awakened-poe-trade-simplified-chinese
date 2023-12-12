@@ -6,7 +6,7 @@ import uiComponents from './web/ui'
 import { initConfig, AppConfig } from './web/Config'
 import { Host } from './web/background/IPC'
 
-;(async function () {
+(async function () {
   await Host.init()
   await initConfig()
   const i18nPlugin = await I18n.init(AppConfig().language)

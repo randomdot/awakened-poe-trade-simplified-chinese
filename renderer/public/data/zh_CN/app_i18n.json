@@ -7,6 +7,7 @@
   "league": "赛季",
   "realm": "服务器",
   "realm_intl": "国际服",
+  "tencent": "国服",
   "app": {
     "leagues_loading": "正在加载赛季…",
     "leagues_failed": "赛季加载错误",
